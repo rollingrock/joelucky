@@ -32,6 +32,10 @@ jobs:
         with:
           enable_cache: true
 
+      - name: Upload artifact
+        # Automatically uploads an artifact from the './_site' directory by default
+        uses: actions/upload-pages-artifact@v3
+
   deploy:
     environment:
       name: github-pages
