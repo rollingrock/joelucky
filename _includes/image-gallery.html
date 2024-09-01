@@ -1,0 +1,17 @@
+<div id="{{include.albumname}}">
+
+    {%- for image in site.static_files -%}
+        {%- if image.path contains 'images/jl/tournament-photos' and image.path contains include.albumname -%}{%- unless image.path contains 'thumbnail' -%}
+            <a href="{{ image.path }}" data-sub-html="{% exiftag image_description, , {{ image.path }} %}" >
+                <img src="/thumbnails{{ image.path }}" />
+            </a>
+        {%- endunless -%}{%- endif -%}
+    {%- endfor -%}
+
+</div>
+<script>
+    $('#{{include.albumname}}').lightGallery({
+    thumbnail:true,
+    selector: 'a'
+});
+</script>
