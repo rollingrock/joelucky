@@ -272,10 +272,10 @@ asciidoctor:
     icons: font
 
 
-mini_magick:
-    photoFolders:
-        source: images/jl/tournament-photos
-        destination: thumbnails/images/jl/tournament-photos
-        resize: "320x240^"
-        gravity: "center"
-        extent: "320x240"
+#mini_magick:
+#    photoFolders:
+#        source: images/jl/tournament-photos
+#        destination: thumbnails/images/jl/tournament-photos
+#        resize: "320x240^"
+#        gravity: "center"
+#        extent: "320x240"
