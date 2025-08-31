@@ -5,3 +5,6 @@ _site
 .jekyll-metadata
 .sass-cache
 Gemfile.lock
+*.jpg
+*.JPG
+*.png
