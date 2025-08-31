@@ -14,10 +14,16 @@
   url: "/photos/"
   side: left
   dropdown:
+  - title: "2023 Tournament Photos"
+    url: "/tournament-photos/photos-2023/"
+  - title: "2017 Tournament Photos"
+    url: "/tournament-photos/photos-2017/"
   - title: "2016 Tournament Photos"
     url: "/tournament-photos/photos-2016/"
   - title: "2015 Tournament Photos"
     url: "/tournament-photos/photos-2015/"
+  - title: "2012 Tournament Photos"
+    url: "/tournament-photos/photos-2012/"
 
 - title: Tournament Registration
   url: "/registration/"

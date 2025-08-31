@@ -5,11 +5,8 @@ subheadline: "Who we are"
 teaser: ""
 permalink: "/info/"
 header:
-    image_fullwidth: "jl/page-title-bg.jpg"
+    image_fullwidth: "jl/bg_golf.png"
 ---
-<p align="center">
-  <img src="/images/jl/2015_Color_Banner_Logo.jpg" />
-</p>
 
 The Joe Lucky Memorial Golf Tournament, Inc. provides financial funding for the education of the children of young widowed families in North Texas. We also provide funding for the Joe Lucky Memorial Scholarship Fund at the Dallas County Community College Scholarship Foundation for students who had the ability in the Science, Technology, Engineering, and Math (STEM) curriculum but lack the financial capability to fulfill their hopes and dreams.
 
@@ -21,7 +18,7 @@ The benefit and effort grew from an expression of love for a man and his family 
   <img src="/images/jl/Lucky Family.jpg" />
 </p>
 
-September 2017 marks the 13th anniversary of the loss of one of Texas Instruments’ young engineers, Joe Lucky, who died suddenly on September 27, 2004, at the age of 38. Joe was one of this life’s good soldiers and left a wife (Jo Ellen) and two young daughters (Marisa and Rebecka). Jo Ellen was a stay at home mom and she and Joe dedicated their lives to making sure that the girls had the best family environment and education opportunities. You can imagine the financial difficulty that a young family suffers when the primary income provider is lost.
+September 2025 marks the 21st anniversary of the loss of one of Texas Instruments’ young engineers, Joe Lucky, who died suddenly on September 27, 2004, at the age of 38. Joe was one of this life’s good soldiers and left a wife (Jo Ellen) and two young daughters (Marisa and Rebecka). Jo Ellen was a stay at home mom and she and Joe dedicated their lives to making sure that the girls had the best family environment and education opportunities. You can imagine the financial difficulty that a young family suffers when the primary income provider is lost.
 
 Some of Joe’s colleagues decided in remembrance of Joe and support of his family to organize a scramble golf tournament to be played annually. We have already seen what a positive impact this tournament has made on Joe’s two young girls as they are aware of the importance of their education and are both in the honors programs at their schools. Marisa is in her senior year at the University of Texas at Dallas this fall and Rebecka will be a freshman there this year.
 
@@ -44,7 +41,3 @@ In late 2013, we changed our policy for family support which had previously been
 The first family affected by this new policy was that of Gary Kelly who was a CAM Engineer at Eagle Circuits. Gary passed away suddenly at the young age of 48 leaving a widow, Debbie and two children Matthew and Caroline, aged 14 (twins). Matthew and Caroline are also beneficiaries of the tournament having proceeds from the tournament put into their 529 Education fund.
 
 ---
-
-## Meet the Board
-
-Put board info here

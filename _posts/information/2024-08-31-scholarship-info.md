@@ -5,7 +5,7 @@ subheadline: "Scholarship Information"
 meta_teaser: "Information and requirements for applying for the scholarship"
 teaser: "Information and requirements for applying for the scholarship"
 header:
-    image: jl/page-title-bg.jpg
+    image: jl/bg_golf.png
     background-color: "#262930"
     caption: This is a caption for the header image with link
     caption_url: https://unsplash.com/

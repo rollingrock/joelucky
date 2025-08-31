@@ -25,7 +25,7 @@ author: Jason Pharis
 
 # This URL is the main address for absolute links. Don't include a slash at the end.
 #
-url: 'https://rollingrock.github.io'
+url: 'https://jlmgt.org'
 baseurl: ''
 
 # This is for the editing function in _/includes/improve_content
@@ -41,8 +41,7 @@ improve_content: https://github.com/Phlow/feeling-responsive/edit/gh-pages
 urlimg: '/images/'
 
 
-# Logo size is 600x80 pixels
-logo: "logo.png"
+logo: "jl_logo_2025_banner_memorial.png"
 
 # Plugins
 plugins:
