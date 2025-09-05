@@ -139,6 +139,10 @@ Click on the “Contact Us” link at the bottom of this page and send a detaile
   </fieldset>
   <fieldset>
     <div class="fs-field">
+      <label class="fs-label" for="member1">Team Member 1</label>
+      <input class="fs-input" id="member1" name="member1" />
+    </div>
+    <div class="fs-field">
       <label class="fs-label" for="member2">Team Member 2</label>
       <input class="fs-input" id="member2" name="member2" />
     </div>
@@ -358,13 +362,12 @@ Click on the “Contact Us” link at the bottom of this page and send a detaile
 5. Volunteers
 
 #### Methods of Payment/Donation
-1. Checks can be made out to JLMGT, Inc. and sent to the address below or handed to a committee member during registration.
-2. You can also use the PayPal link below to electronically transfer funds from your bank account or credit card.
+1. Preferred method of payment is to use the PayPal link below to electronically transfer funds from your bank account or credit card.
+2. Checks can be made out to JLMGT, Inc. and handed to a committee member during registration.
 
 
 <table border="0" width="100%" cellpadding="5">
 <tbody>
-<tr><td>Address To Mail Check: </td><td>JLMGT, Inc.<br/>P.O. Box 833637<br/>Richardson, TX 75083-3637</td></tr>
 <tr><td>Paypal: </td><td>
 <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
 <p align="left"><input name="cmd" type="hidden" value="_s-xclick" /> <input name="hosted_button_id" type="hidden" value="2KZJY65FPZXUQ" /> <input alt="PayPal - The safer, easier way to pay online!" name="submit" src="https://www.paypal.com/en_US/i/btn/btn_donateCC_LG.gif" type="image" /> <img src="https://www.paypal.com/en_US/i/scr/pixel.gif" alt="" width="1" height="1" border="0" /></p>
