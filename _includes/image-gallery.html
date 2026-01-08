@@ -1,17 +1,54 @@
 <div id="{{include.albumname}}">
 
+    {%- assign video_index = 0 -%}
     {%- for image in site.static_files -%}
         {%- if image.path contains 'images/jl/tournament-photos' and image.path contains include.albumname -%}{%- unless image.path contains 'thumbnail' -%}
-            <a href="{{ image.path }}" >
-                <img src="/thumbnails{{ image.path }}" />
-            </a>
+            {%- assign file_ext = image.path | split: '.' | last | downcase -%}
+            {%- assign valid_image = 'jpg,jpeg,png,gif,bmp,webp' | split: ',' -%}
+            {%- assign valid_video = 'mov,mp4,webm,avi' | split: ',' -%}
+            {%- if valid_video contains file_ext -%}
+                {%- assign video_index = video_index | plus: 1 -%}
+                <a data-html="#video-{{include.albumname}}-{{video_index}}" data-poster="/thumbnails{{ image.path | replace: file_ext, 'jpg' }}">
+                    <img src="/thumbnails{{ image.path | replace: file_ext, 'jpg' }}" alt="Video thumbnail" />
+                    <div class="video-overlay">▶</div>
+                </a>
+                <div style="display:none;" id="video-{{include.albumname}}-{{video_index}}">
+                    <video class="lg-video-object lg-html5" controls preload="none" style="max-width: 100%;">
+                        <source src="{{ image.path }}" type="video/mp4">
+                        Your browser does not support HTML5 video.
+                    </video>
+                </div>
+            {%- elsif valid_image contains file_ext -%}
+                <a href="{{ image.path }}">
+                    <img src="/thumbnails{{ image.path }}" />
+                </a>
+            {%- endif -%}
         {%- endunless -%}{%- endif -%}
     {%- endfor -%}
 
 </div>
+
+<style>
+    .video-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 48px;
+        color: white;
+        text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        pointer-events: none;
+    }
+    #{{include.albumname}} a {
+        position: relative;
+        display: inline-block;
+    }
+</style>
+
 <script>
     $('#{{include.albumname}}').lightGallery({
-    thumbnail:true,
-    selector: 'a'
-});
+        thumbnail: true,
+        selector: 'a',
+        videoMaxWidth: '1000px'
+    });
 </script>

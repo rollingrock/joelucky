@@ -1,26 +1,49 @@
 #
-# This config-file is only needed for development. Instead of changing the url
-# everytime you work locally on the project, you start both config-files, overwriting
-# the first one with the development variables needed.
+# Development Configuration for Local Testing
 #
-# Start development with › $ jekyll serve --config _config.yml,_config_dev.yml
+# This config file overrides _config.yml settings for local development.
+# It allows you to test the site locally without modifying production settings.
+#
+# Usage:
+#   jekyll serve --config _config.yml,_config_dev.yml
+#
+# The second config file (_config_dev.yml) will override settings from the first.
+#
 
-url: 		'http://localhost:4000'
-baseurl: 	''
-urlimg: 	'http://localhost:4000/images/'
+# Local Development URLs
+url: 'http://localhost:4000'
+baseurl: ''
+urlimg: 'http://localhost:4000/images/'
 
-# See › https://github.com/jekyll/jekyll-gist#disabling-noscript-support
+# Disable production features
+google_analytics_tracking_id: false
+# google_site_verification: false
+# bing_webmastertools_id: false
+
+# Sass - Expanded output for easier debugging
+sass:
+  style: :expanded
+  line_numbers: true
+  sass_dir: _sass
+
+# HTML Compression - Disable for development (easier debugging)
+compress_html:
+  clippings: none
+  comments: all
+  endings: none
+  profile: false
+  ignore:
+    envs: [development]
+
+# Jekyll Gist - Disable noscript for faster development
 gist:
   noscript: false
 
-sass:
-  # http://sass-lang.com/documentation/file.SASS_REFERENCE.html#output_style
-  style: :expanded
-  line_numbers: true
-  # trace_selectors: true
-  # debug_info: true
-  # FUTURE https://github.com/jekyll/jekyll-sass-converter/issues/12
-  # sourcemap: true # Produces an error
+# Development optimizations
+incremental: true        # Faster rebuilds (only regenerate changed files)
+# show_drafts: true      # Uncomment to show posts in _drafts folder
+# future: true           # Uncomment to show posts with future dates
+# unpublished: false     # Uncomment to hide posts marked as unpublished
 
-# Disable when not in production
-google_analytics_tracking_id: false
+# Keep Jekyll verbose for debugging
+# verbose: true          # Uncomment for detailed build output

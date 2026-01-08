@@ -14,6 +14,8 @@
   url: "/photos/"
   side: left
   dropdown:
+  - title: "2025 Tournament Photos"
+    url: "/tournament-photos/photos-2025/"
   - title: "2023 Tournament Photos"
     url: "/tournament-photos/photos-2023/"
   - title: "2017 Tournament Photos"
