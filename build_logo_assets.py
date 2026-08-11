@@ -108,6 +108,31 @@ def bbox_of(mask):
     return int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1
 
 
+def grow_into_halo(mask, rgb, rounds=6, near_white=735):
+    """Extend a mask over the antialiased fringe around its own strokes.
+
+    The colour tests that isolate the year text only catch solid ink, leaving
+    a pale outline behind. That went unnoticed while replacement text was
+    drawn over the top, but shows as a ghost on the undated emblem. Growing
+    one pixel at a time and intersecting with "not essentially white" follows
+    each glyph's own fade to nothing, and stops at the white gap separating
+    the text from the arcs rather than bleeding across it.
+    """
+    faint = rgb.sum(axis=2) < near_white
+    grown = mask.copy()
+    for _ in range(rounds):
+        spread = np.zeros_like(grown)
+        spread[1:, :] |= grown[:-1, :]
+        spread[:-1, :] |= grown[1:, :]
+        spread[:, 1:] |= grown[:, :-1]
+        spread[:, :-1] |= grown[:, 1:]
+        nxt = (grown | spread) & faint
+        if (nxt == grown).all():
+            break
+        grown = nxt
+    return grown
+
+
 def annual_mask(rgb):
     """The maroon script. Maroon appears nowhere else in the artwork."""
     r, g, b = rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2]
@@ -143,8 +168,13 @@ def year_mask(rgb):
     return ink & ~reached
 
 
-def build_emblem(year, ordinal):
-    """The master with its year text replaced, on a transparent background."""
+def build_emblem(year=None, ordinal=None, plain=False):
+    """The master with its year text replaced, on a transparent background.
+
+    With plain=True the year text is removed and nothing put back, giving the
+    undated emblem — the form to hand out for shirts, signage or anything that
+    should not be pinned to one tournament.
+    """
     plate = Image.open(MASTER).convert("RGB")
     rgb = np.asarray(plate).astype(int)
 
@@ -153,12 +183,14 @@ def build_emblem(year, ordinal):
 
     # Erase by ink rather than by rectangle, so the descender of "Lucky" and
     # the arc ends that overlap these blocks survive untouched.
+    erase = grow_into_halo(annual | years, rgb)
     cleared = np.asarray(plate).copy()
-    cleared[annual | years] = (255, 255, 255)
+    cleared[erase] = (255, 255, 255)
     plate = Image.fromarray(cleared)
 
-    draw_centred(plate, f"{ordinal} Annual", ANNUAL_FONT, annual_box, MAROON)
-    draw_centred(plate, str(year), YEAR_FONT, year_box, NAVY)
+    if not plain:
+        draw_centred(plate, f"{ordinal} Annual", ANNUAL_FONT, annual_box, MAROON)
+        draw_centred(plate, str(year), YEAR_FONT, year_box, NAVY)
 
     emblem = white_to_alpha(plate)
     return emblem.crop(emblem.getbbox())
@@ -213,10 +245,37 @@ def fit_into(img, box):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--year", type=int, required=True)
-    ap.add_argument("--ordinal", required=True,
+    ap.add_argument("--year", type=int)
+    ap.add_argument("--ordinal",
                     help='e.g. "21st" — the annual count, not the year')
+    ap.add_argument("--plain", metavar="DIR", nargs="?", const=".",
+                    help="write the undated emblem to DIR instead of building "
+                         "site assets (transparent and white-backed PNGs)")
     args = ap.parse_args()
+
+    if args.plain is not None:
+        emblem = build_emblem(plain=True)
+        out = os.path.abspath(args.plain)
+        os.makedirs(out, exist_ok=True)
+
+        transparent = os.path.join(out, "jl_logo_plain_transparent.png")
+        emblem.save(transparent)
+
+        # Transparency renders as black in some document and email clients, so
+        # ship a flattened copy alongside it.
+        flat = Image.new("RGB", emblem.size, (255, 255, 255))
+        flat.paste(emblem, mask=emblem.getchannel("A"))
+        white = os.path.join(out, "jl_logo_plain_white.png")
+        flat.save(white)
+
+        for p in (transparent, white):
+            print(f"  {os.path.basename(p):<34} {emblem.width}x{emblem.height}"
+                  f"  {os.path.getsize(p) // 1024} KB")
+        print(f"\nwritten to {out}")
+        return
+
+    if args.year is None or args.ordinal is None:
+        ap.error("--year and --ordinal are required unless --plain is given")
 
     emblem = build_emblem(args.year, args.ordinal)
     outputs = [
