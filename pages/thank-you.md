@@ -8,6 +8,8 @@ permalink           : "/thank-you/"
 noindex             : true
 header:
     image_fullwidth: "jl/bg_golf.png"
+sitemap:
+    exclude: true
 ---
 
 ## Thank you — your registration has been received.
