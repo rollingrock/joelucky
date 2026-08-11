@@ -46,6 +46,18 @@ ANNUAL_FONT = "BRUSHSCI.TTF"      # Brush Script MT
 YEAR_FONT = "BOOKOSI.TTF"         # Bookman Old Style Italic
 WORDMARK_FONT = "verdanab.ttf"   # matches the original wordmark's metrics
 
+# The two concentric rings, fitted to the master. Angles use
+# atan2(y - cy, x - cx) in degrees, so 90 is the bottom of the image. Both
+# rings break at the bottom to clear the year text; the radius and its slope
+# either side of the break are what let the missing arc be drawn back in.
+RING_CENTRE = (497.0, 538.0)
+RING_INK = (0x19, 0x27, 0x3D)
+RINGS = (
+    # r_lo r_hi   t0   r0      slope0   t1   r1      slope1  width
+    (368,  406,   66,  381.9,  -0.242,  128, 385.7,  +0.308, 8.0),   # inner
+    (406,  458,   68,  424.0,  -0.533,  120, 422.8,  +0.520, 8.2),   # outer
+)
+
 # Banner geometry measured from the 2025 banner so the header does not shift.
 BANNER = (1278, 392)
 EMBLEM_BOX = (11, 40, 270, 290)                  # x, y, w, h
@@ -168,7 +180,65 @@ def year_mask(rgb):
     return ink & ~reached
 
 
-def build_emblem(year=None, ordinal=None, plain=False):
+def polar(shape):
+    """Radius and angle of every pixel about the ring centre."""
+    cx, cy = RING_CENTRE
+    yy, xx = np.mgrid[0:shape[0], 0:shape[1]]
+    return (np.hypot(xx - cx, yy - cy),
+            np.degrees(np.arctan2(yy - cy, xx - cx)) % 360)
+
+
+def scrub_zone(rgb, boxes, pad=6):
+    """Everything inside the year-text boxes that is not part of the artwork.
+
+    Growing the ink masks over their own halo still leaves the palest fringe
+    behind — invisible under replacement text, but a legible ghost on the
+    undated emblem. Inside these boxes the only real artwork is the green
+    descender of "Lucky" and the two navy rings passing through, so anything
+    that is neither can go, however faint.
+    """
+    r, _ = polar(rgb.shape[:2])
+    zone = np.zeros(rgb.shape[:2], bool)
+    for x0, y0, x1, y1 in boxes:
+        zone[max(0, y0-pad):y1+pad, max(0, x0-pad):x1+pad] = True
+
+    red, green, blue = rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2]
+    is_green = (green > red + 8) | (green > blue + 8)
+    on_ring = np.zeros_like(zone)
+    for r_lo, r_hi, *_ in RINGS:
+        on_ring |= (r >= r_lo - 2) & (r <= r_hi + 2)
+
+    return zone & ~is_green & ~on_ring & (rgb.sum(axis=2) < 764)
+
+
+def hermite(t, p0, p1, m0, m1):
+    t2, t3 = t * t, t * t * t
+    return ((2*t3 - 3*t2 + 1) * p0 + (t3 - 2*t2 + t) * m0
+            + (-2*t3 + 3*t2) * p1 + (t3 - t2) * m1)
+
+
+def close_rings(rgb, overlap=3.0):
+    """Draw each ring's missing bottom arc.
+
+    A rotated copy of existing arc does not work: the rings wobble by several
+    pixels, so the copy meets the originals at the wrong radius. Interpolating
+    the centreline with a Hermite curve matched to the radius *and* its slope
+    at both ends joins seamlessly, and running a little past each end replaces
+    the tapered tips with full-width stroke.
+    """
+    r, th = polar(rgb.shape[:2])
+    out = rgb.astype(float)
+    for _, _, t0, r0, s0, t1, r1, s1, width in RINGS:
+        span = t1 - t0
+        centre = hermite(np.clip((th - t0) / span, 0, 1),
+                         r0, r1, s0 * span, s1 * span)
+        cover = np.clip(width / 2 + 0.5 - np.abs(r - centre), 0, 1)
+        cover[(th < t0 - overlap) | (th > t1 + overlap)] = 0
+        out = out * (1 - cover[..., None]) + np.array(RING_INK) * cover[..., None]
+    return out.astype(np.uint8)
+
+
+def build_emblem(year=None, ordinal=None, plain=False, closed=False):
     """The master with its year text replaced, on a transparent background.
 
     With plain=True the year text is removed and nothing put back, giving the
@@ -186,6 +256,14 @@ def build_emblem(year=None, ordinal=None, plain=False):
     erase = grow_into_halo(annual | years, rgb)
     cleared = np.asarray(plate).copy()
     cleared[erase] = (255, 255, 255)
+
+    if plain:
+        # Nothing will be drawn back over the fringe, so it has to go entirely.
+        cleared[scrub_zone(cleared.astype(int), (annual_box, year_box))] = \
+            (255, 255, 255)
+        if closed:
+            cleared = close_rings(cleared)
+
     plate = Image.fromarray(cleared)
 
     if not plain:
@@ -254,23 +332,27 @@ def main():
     args = ap.parse_args()
 
     if args.plain is not None:
-        emblem = build_emblem(plain=True)
         out = os.path.abspath(args.plain)
         os.makedirs(out, exist_ok=True)
+        written = []
+        for closed in (False, True):
+            emblem = build_emblem(plain=True, closed=closed)
+            tag = "closed" if closed else "open"
 
-        transparent = os.path.join(out, "jl_logo_plain_transparent.png")
-        emblem.save(transparent)
+            transparent = os.path.join(out, f"jl_logo_plain_{tag}_transparent.png")
+            emblem.save(transparent)
 
-        # Transparency renders as black in some document and email clients, so
-        # ship a flattened copy alongside it.
-        flat = Image.new("RGB", emblem.size, (255, 255, 255))
-        flat.paste(emblem, mask=emblem.getchannel("A"))
-        white = os.path.join(out, "jl_logo_plain_white.png")
-        flat.save(white)
+            # Transparency renders as black in some document and email
+            # clients, so ship a flattened copy alongside it.
+            flat = Image.new("RGB", emblem.size, (255, 255, 255))
+            flat.paste(emblem, mask=emblem.getchannel("A"))
+            white = os.path.join(out, f"jl_logo_plain_{tag}_white.png")
+            flat.save(white)
+            written += [(transparent, emblem.size), (white, emblem.size)]
 
-        for p in (transparent, white):
-            print(f"  {os.path.basename(p):<34} {emblem.width}x{emblem.height}"
-                  f"  {os.path.getsize(p) // 1024} KB")
+        for path, size in written:
+            print(f"  {os.path.basename(path):<40} {size[0]}x{size[1]}"
+                  f"  {os.path.getsize(path) // 1024} KB")
         print(f"\nwritten to {out}")
         return
 
