@@ -149,13 +149,23 @@ This generates the production site in the `_site/` directory with:
 
 ## Deployment
 
-The site is deployed via **GitHub Pages** from the `gh-pages` branch. Any push to this branch automatically triggers a deployment.
+The site is deployed to **DreamHost** shared hosting by `deploy.sh`, which builds
+the site and rsyncs `_site/` to the server. Pushing to `gh-pages` updates the
+repository only — it does **not** publish the live site.
 
 ### Deployment Steps
 
-1. Ensure all changes are committed
-2. Push to the `gh-pages` branch
-3. GitHub Pages will automatically build and deploy
+```bash
+./deploy.sh
+```
+
+The script reads `DEPLOY_PASSWORD` from `.deploy_env` (gitignored) and requires
+`sshpass` and `rsync`, so it is run from WSL rather than PowerShell.
+
+Because `rsync --delete` mirrors your local `_site/`, anything missing locally
+is removed from the live site. Note that photo galleries are gitignored, so a
+fresh clone will delete every gallery image on deploy — build from a working
+copy that has the `images/` tree intact.
 
 ## Photo Gallery Features
 

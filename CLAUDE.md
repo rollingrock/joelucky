@@ -12,7 +12,7 @@ This is the Joe Lucky Memorial Golf Tournament website (jlmgt.org), a Jekyll-bas
 - **CSS Framework**: Foundation (Zurb)
 - **Theme**: Based on "Feeling Responsive" theme by Phlow
 - **Image Processing**: mini_magick (for photo galleries)
-- **Deployment**: GitHub Pages (gh-pages branch)
+- **Deployment**: DreamHost shared hosting via `deploy.sh` (rsync of `_site/`)
 
 ## Development Commands
 
@@ -105,7 +105,25 @@ The development config overlays the production config, changing URLs, disabling 
 **Images**:
 - `.gitignore` excludes `.jpg`, `.JPG`, and `.png` files
 - Images stored in `images/` directory (particularly `images/jl/`)
-- Logo: `jl_logo_2025_banner_memorial.png`
+- Logo: `assets/img/jl_logo_2026_banner_memorial.png` (masthead banner, set via
+  `logo:` in `_config.yml`). The homepage widget uses a separate square crest,
+  `images/jl_logo_<year>_transparent_smooth_reduced.png`, referenced from
+  `pages/pages-root-folder/index.md`.
+- **Do not regenerate the logo with an image model.** Every asset is derived
+  from `assets/logo-master/emblem_master.png` (1024x1024) by
+  `build_logo_assets.py`. Only two things change per year, and the script
+  replaces both by masking the original ink and re-typesetting:
+
+  ```bash
+  python build_logo_assets.py --year 2026 --ordinal 21st
+  ```
+
+  This keeps the emblem byte-identical year to year. Regenerating it instead
+  produces a different drawing each time — different typefaces, stroke weights,
+  and palette — which is why the 2026 regeneration could not simply be dropped
+  into the 2025 slots.
+- The master is the one image exempted from the `*.png` gitignore rule, since
+  nothing else can reproduce it.
 
 **JavaScript**:
 - jQuery and mediaElement.js for media playback
@@ -153,7 +171,12 @@ Edit `pages/registration.md`:
 
 ## Important Notes
 
-- **Main branch is `gh-pages`** - this branch deploys directly to GitHub Pages
+- **Main branch is `gh-pages`** - this is the working branch, but it does *not*
+  auto-deploy. The live site is published by running `./deploy.sh`, which builds
+  and rsyncs `_site/` to DreamHost. Pushing to GitHub only updates the repo.
+- **The repo is public.** Never commit committee email addresses or credentials.
+  The Apps Script sources in `apps-script/` read their recipient lists from
+  Script Properties for this reason — see `apps-script/README.md`.
 - The `improve_content` setting in `_config.yml` points to the Phlow/feeling-responsive repo (not this repo)
 - Image files are gitignored to keep repo size manageable
 - The site uses Jekyll 3.x with plugins: jekyll-asciidoc, jekyll-gist, jekyll-paginate
