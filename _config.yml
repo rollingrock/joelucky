@@ -80,6 +80,7 @@ exclude:
     - deploy.sh
     - build_logo_assets.py
     - convert_thumbs.py
+    - optimize_gallery.py
     - assets/logo-master
 
 
