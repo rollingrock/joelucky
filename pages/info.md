@@ -18,7 +18,7 @@ The benefit and effort grew from an expression of love for a man and his family 
   <img src="/images/jl/Lucky Family.jpg" />
 </p>
 
-September 2025 marks the 21st anniversary of the loss of one of Texas Instruments’ young engineers, Joe Lucky, who died suddenly on September 27, 2004, at the age of 38. Joe was one of this life’s good soldiers and left a wife (Jo Ellen) and two young daughters (Marisa and Rebecka). Jo Ellen was a stay at home mom and she and Joe dedicated their lives to making sure that the girls had the best family environment and education opportunities. You can imagine the financial difficulty that a young family suffers when the primary income provider is lost.
+September 2026 marks the 22nd anniversary of the loss of one of Texas Instruments’ young engineers, Joe Lucky, who died suddenly on September 27, 2004, at the age of 38. Joe was one of this life’s good soldiers and left a wife (Jo Ellen) and two young daughters (Marisa and Rebecka). Jo Ellen was a stay at home mom and she and Joe dedicated their lives to making sure that the girls had the best family environment and education opportunities. You can imagine the financial difficulty that a young family suffers when the primary income provider is lost.
 
 Some of Joe’s colleagues decided in remembrance of Joe and support of his family to organize a scramble golf tournament to be played annually. We have already seen what a positive impact this tournament has made on Joe’s two young girls as they are aware of the importance of their education and are both in the honors programs at their schools. Marisa is in her senior year at the University of Texas at Dallas this fall and Rebecka will be a freshman there this year.
 

@@ -8,6 +8,8 @@ header:
     image_fullwidth: "jl/bg_golf.png"
 ---
 
+## [2025 Tournament](/tournament-photos/photos-2025/)
+
 ## [2023 Tournament](/tournament-photos/photos-2023/)
 
 ## [2017 Tournament](/tournament-photos/photos-2017/)

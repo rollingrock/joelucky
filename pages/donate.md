@@ -25,4 +25,4 @@ header:
 <br/>
 <br/>
 ##### Questions about other donation options? Use the contact link below.
-<span style="color: red; font-size: 14pt;"><a title="click to ask for more information" href="http://jlmgt.org/contact-page/">Contact Us</a></span>
+<span style="color: red; font-size: 14pt;"><a title="click to ask for more information" href="{{ site.url }}{{ site.baseurl }}/contact/">Contact Us</a></span>

@@ -10,7 +10,7 @@ header:
 widget1:
   title: "Who are we?"
   url: '/info/'
-  image: jl_logo_2025_transparent_smooth_reduced.png
+  image: jl_logo_2026_transparent_smooth_reduced.png
   text: 'Our mission is to impact the lives of young students in our community through the proceeds generated from the annual Joe Lucky Memorial Golf Tournament in providing financial aid to students.'
 widget2:
   title: "Urgent Cause"
@@ -21,7 +21,7 @@ widget3:
   title: "Golf Tournament"
   url: '/registration/'
   image: jl/golf-stock.png
-  text: '<em>Tournament Registration</em> - Learn more about the annual golf tournament and how to register here.   Complete the attached pdf and return to us by email'
+  text: '<em>Tournament Registration</em> - Our 21st annual tournament is Thursday, October 1st, 2026 at Sherrill Park Golf Course. Learn more and register online here.'
 #
 # Use the call for action to show a button on the frontpage
 #

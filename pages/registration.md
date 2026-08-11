@@ -14,18 +14,20 @@ header:
 #### Event Information
 <table border="0" width="400px" cellpadding="5">
 <tbody>
-<tr><td>When: </td><td>October 2nd 2025</td></tr>
-<tr><td>Where: </td><td>Sherrill Park Golf Course<br/>2001 East Lookout Drive<br/>Richardson, Tx 75082<br/>972-234-1416</td></tr>
+<tr><td>When: </td><td>Thursday, October 1st 2026</td></tr>
+<tr><td>Where: </td><td>Sherrill Park Golf Course, Course #1<br/>2001 East Lookout Drive<br/>Richardson, Tx 75082<br/>972-234-1416</td></tr>
 <tr><td>Start Time: </td><td>11:00 AM Check-in<br/>12:00 PM Shotgun Start<br/>Dinner Afterwards</td></tr>
 </tbody></table>
 
 #### For Information or Questions
 Click on the “Contact Us” link at the bottom of this page and send a detailed description of your question. A committee member will respond asap.
 
-#### 2025 Event Registration
+#### 2026 Event Registration
+Our 21st annual tournament.
+
 <div style="border: 1px solid black; padding: 10px">
 <form
-  action="https://script.google.com/macros/s/AKfycbwmUZw-FTfygRfJts147beg_zMASkvJ1zq0rEOkv3mHTwbUdmLZ3edUdEfAtnW7WtI/exec"
+  action="https://script.google.com/macros/s/AKfycbx-y1-0W-ZFZJ_1khfb8oWtvlfWzNYyYAKXDkS2e-exb8ReQD1G9MYUxgjGTnLjNgyU/exec"
   class="fs-form fs-layout__2-column"
   target="_top"
   method="POST"
@@ -197,8 +199,8 @@ Click on the “Contact Us” link at the bottom of this page and send a detaile
     </tr>
     <tr>
       <td>Shirt w/ Logo (Size in Notes)</td>
-      <td>$50</td>
-      <td><input type="number" name="shirt_qty" min="0" value="0" data-price="50"></td>
+      <td>$45</td>
+      <td><input type="number" name="shirt_qty" min="0" value="0" data-price="45"></td>
       <td class="subtotal">$0</td>
     </tr>
     <tr>
@@ -252,7 +254,7 @@ Click on the “Contact Us” link at the bottom of this page and send a detaile
     sponsor_first: 1250,
     sponsor_additional: 500,
     donation: 100,
-    shirt: 50,
+    shirt: 45,
     gallery: 15
   };
 
@@ -375,9 +377,7 @@ Click on the “Contact Us” link at the bottom of this page and send a detaile
 </td></tr>
 </tbody></table>
 
-<span style="color: red; font-size: 14pt;"><a title="click to ask for more information" href="http://jlmgt.org/contact-page/">Contact Us</a></span>
-
-<p align="justify">Invitations to individuals and corporate sponsors will be notified by e-mail before September 1, 2025.</p>
+<span style="color: red; font-size: 14pt;"><a title="click to ask for more information" href="{{ site.url }}{{ site.baseurl }}/contact/">Contact Us</a></span>
 
 <iframe style="border: 0;" src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d13386.76306708702!2d-96.68634594690322!3d32.98555941717764!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x39e4dda726e0765e!2sSherrill+Park+Golf+Course!5e0!3m2!1sen!2sus!4v1503370333814" width="600" height="450" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
-<p align="justify">The tournament format will be a 4 person scramble.  You may enter as an individual or a 4 person team.  The JLMGT committee will insure that all individuals are placed on a team.  Details of the tournament will follow but we need you to start forming your teams (foursomes) for the competition.  <em><strong>We need all team names to be submitted by Friday, September 19, 2025.</strong></em></p>
+<p align="justify">The tournament format will be a 4 person scramble.  You may enter as an individual or a 4 person team.  The JLMGT committee will insure that all individuals are placed on a team.  Details of the tournament will follow but we need you to start forming your teams (foursomes) for the competition.  <em><strong>We need all team names to be submitted by Friday, September 18, 2026.</strong></em></p>
