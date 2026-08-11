@@ -336,6 +336,29 @@ body.video cite { color: #fff; }
 
 
 
+/* Frontpage widgets — equalize column heights so "More" buttons line up
+------------------------------------------------------------------- */
+
+@media #{$medium-up} {
+  .frontpage-widgets {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+
+  .frontpage-widget {
+    display: flex;
+    flex-direction: column;
+    float: none;
+
+    > p:last-child {
+      margin-top: auto;
+    }
+  }
+}
+
+
+
 /* CSS-Classes to add margin at top or bottom
 ------------------------------------------------------------------- */
 

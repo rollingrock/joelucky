@@ -8,3 +8,11 @@ Gemfile.lock
 *.jpg
 *.JPG
 *.png
+
+# ...except the logo master. Every other logo asset is derived from this file
+# by build_logo_assets.py, so it is the one image the repo cannot regenerate.
+!assets/logo-master/*.png
+.deploy_env
+desktop.ini
+vendor/
+.claude/settings.local.json
