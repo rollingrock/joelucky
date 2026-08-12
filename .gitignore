@@ -7,7 +7,14 @@ _site
 Gemfile.lock
 *.jpg
 *.JPG
+*.jpeg
+*.JPEG
 *.png
+*.mp4
+*.MP4
+*.mov
+*.MOV
+__pycache__/
 
 # ...except the logo master. Every other logo asset is derived from this file
 # by build_logo_assets.py, so it is the one image the repo cannot regenerate.
