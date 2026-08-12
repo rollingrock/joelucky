@@ -238,13 +238,24 @@ def close_rings(rgb, overlap=3.0):
     return out.astype(np.uint8)
 
 
-def build_emblem(year=None, ordinal=None, plain=False, closed=False):
+def build_emblem(year=None, ordinal=None, closed=False):
     """The master with its year text replaced, on a transparent background.
 
-    With plain=True the year text is removed and nothing put back, giving the
-    undated emblem — the form to hand out for shirts, signage or anything that
-    should not be pinned to one tournament.
+    Both lines are optional and independent:
+
+        year and ordinal  the full dated emblem used on the site
+        year only         drops the "Nth Annual" line above the year
+        neither           the undated emblem, for shirts or signage
+
+    The year sits in the break at the bottom of the rings, so it stays put when
+    the line above it is dropped — moving it up would leave a gap in the circle
+    with nothing in it. closed=True joins that break and therefore only makes
+    sense when no year is drawn.
     """
+    if closed and year is not None:
+        raise ValueError("closed=True collides with the year, which sits in "
+                         "the ring gap")
+
     plate = Image.open(MASTER).convert("RGB")
     rgb = np.asarray(plate).astype(int)
 
@@ -257,17 +268,19 @@ def build_emblem(year=None, ordinal=None, plain=False, closed=False):
     cleared = np.asarray(plate).copy()
     cleared[erase] = (255, 255, 255)
 
-    if plain:
-        # Nothing will be drawn back over the fringe, so it has to go entirely.
-        cleared[scrub_zone(cleared.astype(int), (annual_box, year_box))] = \
-            (255, 255, 255)
-        if closed:
-            cleared = close_rings(cleared)
+    # Wherever nothing will be drawn back, the palest fringe has to go too, or
+    # the old lettering ghosts through.
+    bare = [box for box, keep in ((annual_box, ordinal is not None),
+                                  (year_box, year is not None)) if not keep]
+    if bare:
+        cleared[scrub_zone(cleared.astype(int), bare)] = (255, 255, 255)
+    if closed:
+        cleared = close_rings(cleared)
 
     plate = Image.fromarray(cleared)
-
-    if not plain:
+    if ordinal is not None:
         draw_centred(plate, f"{ordinal} Annual", ANNUAL_FONT, annual_box, MAROON)
+    if year is not None:
         draw_centred(plate, str(year), YEAR_FONT, year_box, NAVY)
 
     emblem = white_to_alpha(plate)
@@ -326,38 +339,52 @@ def main():
     ap.add_argument("--year", type=int)
     ap.add_argument("--ordinal",
                     help='e.g. "21st" — the annual count, not the year')
-    ap.add_argument("--plain", metavar="DIR", nargs="?", const=".",
-                    help="write the undated emblem to DIR instead of building "
-                         "site assets (transparent and white-backed PNGs)")
+    ap.add_argument("--emblem", "--plain", metavar="DIR", nargs="?", const=".",
+                    dest="emblem",
+                    help="write standalone emblem PNGs to DIR instead of "
+                         "building site assets. What they carry follows --year "
+                         "and --ordinal: neither gives the undated emblem in "
+                         "open and closed-circle forms, --year alone gives the "
+                         "year without the annual line, both gives the full "
+                         "mark. Each is written transparent and white-backed.")
     args = ap.parse_args()
 
-    if args.plain is not None:
-        out = os.path.abspath(args.plain)
+    if args.emblem is not None:
+        out = os.path.abspath(args.emblem)
         os.makedirs(out, exist_ok=True)
-        written = []
-        for closed in (False, True):
-            emblem = build_emblem(plain=True, closed=closed)
-            tag = "closed" if closed else "open"
 
-            transparent = os.path.join(out, f"jl_logo_plain_{tag}_transparent.png")
+        if args.year is None:
+            # No year in the ring gap, so the closed circle is available.
+            variants = [("plain_open", dict(closed=False)),
+                        ("plain_closed", dict(closed=True))]
+        elif args.ordinal is None:
+            variants = [(f"{args.year}", dict(year=args.year))]
+        else:
+            variants = [(f"{args.year}_{args.ordinal}_annual",
+                         dict(year=args.year, ordinal=args.ordinal))]
+
+        written = []
+        for tag, kwargs in variants:
+            emblem = build_emblem(**kwargs)
+            transparent = os.path.join(out, f"jl_logo_{tag}_transparent.png")
             emblem.save(transparent)
 
             # Transparency renders as black in some document and email
             # clients, so ship a flattened copy alongside it.
             flat = Image.new("RGB", emblem.size, (255, 255, 255))
             flat.paste(emblem, mask=emblem.getchannel("A"))
-            white = os.path.join(out, f"jl_logo_plain_{tag}_white.png")
+            white = os.path.join(out, f"jl_logo_{tag}_white.png")
             flat.save(white)
             written += [(transparent, emblem.size), (white, emblem.size)]
 
         for path, size in written:
-            print(f"  {os.path.basename(path):<40} {size[0]}x{size[1]}"
+            print(f"  {os.path.basename(path):<44} {size[0]}x{size[1]}"
                   f"  {os.path.getsize(path) // 1024} KB")
         print(f"\nwritten to {out}")
         return
 
     if args.year is None or args.ordinal is None:
-        ap.error("--year and --ordinal are required unless --plain is given")
+        ap.error("--year and --ordinal are required when building site assets")
 
     emblem = build_emblem(args.year, args.ordinal)
     outputs = [
