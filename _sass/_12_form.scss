@@ -93,6 +93,24 @@ fieldset {
   grid-column: 1 / -1;
 }
 
+/* Grid items default to min-width:auto, so a child refuses to shrink below its
+   own min-content width. Without this a long label or a wide table pushes the
+   grid past its container and the whole page scrolls sideways. */
+.fs-form > *,
+.fs-form fieldset > * {
+  min-width: 0;
+}
+
+/* Two columns do not fit a phone. Collapsing to one is what stops the fields
+   from overflowing on small screens. */
+@media screen and (max-width: 40em) {
+  .fs-form:where(.fs-layout__2-column),
+  .fs-form:where(.fs-layout__2-column) fieldset {
+    column-gap: 0;
+    grid-template-columns: 1fr;
+  }
+}
+
 .fs-fieldset-title {
   color: var(--color-text-default);
   font-family: var(--font-family-display);
