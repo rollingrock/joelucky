@@ -43,11 +43,45 @@ Edit the CONFIG block at the top of `registration/Code.js`:
 The new sheet needs the same header row as the previous year. The script writes
 columns in `QTY_FIELDS` order, which is derived from the `PRICES` object, so
 adding or reordering a priced line item changes the spreadsheet layout —
-update the sheet headers to match.
+update the sheet headers to match. `appendRow` writes positionally and does not
+consult the headers, so a sheet whose columns disagree with the code will
+silently file values under the wrong names. Run `checkSetup()` from the editor
+after any such change; it throws on a missing or out-of-order column.
 
 Prices live in one place per side: the `PRICES` object here, and the `P` object
 in `pages/registration.md`. Both must be changed together; the server total is
 authoritative and a mismatch is recorded in the `total_tampered` column.
+
+Each `PRICES` entry declares a `kind`:
+
+| `kind` | Meaning |
+|---|---|
+| `qty` | quantity × `price` |
+| `tiered` | first unit at `price`, each additional at `additional` (Corporate Sponsor) |
+| `amount` | the submitted value *is* the dollar figure (Extra Donation) — allows cents, capped at `MAX_DONATION` |
+
+## Sheet header row
+
+The 2026 layout, in order. Shirts are one column per cut/size so the committee
+can `SUM` each size across every registration when placing the order; the
+notification emails roll them back up into a single line.
+
+```
+timestamp  registration_type  assign_individual  players_needed
+team_name  contact_name  contact_email  contact_phone
+member1  member2  member3  member4
+tournament_fee_qty  mulligan_qty  club_rental_qty  corp_sponsor_qty
+shirt_m_s  shirt_m_m  shirt_m_l  shirt_m_xl  shirt_m_xxl
+shirt_w_s  shirt_w_m  shirt_w_l  shirt_w_xl  shirt_w_xxl
+donation_amount
+calculated_total  client_total  server_total  total_tampered  notes
+```
+
+`assign_individual` stays a plain `Yes`/`No` so the column remains filterable.
+Its meaning depends on `registration_type`: an individual asking to be placed
+on a team, or a corporate sponsor asking us to find golfers to fill their
+foursome — in which case `players_needed` holds the count. The emails label it
+accordingly.
 
 ## Working with clasp
 

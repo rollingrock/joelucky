@@ -11,6 +11,15 @@ header:
 
 ## Tournament Registration
 
+<style>
+  /* Predate the responsive layout and push the page sideways on a phone: the
+     map embed is a hardcoded 600px and the event-info table a fixed 400px.
+     This style block is emitted only on this page, so the bare selectors are
+     scoped to it. */
+  iframe { max-width: 100%; }
+  table[width="400px"] { max-width: 100%; }
+</style>
+
 #### Event Information
 <table border="0" width="400px" cellpadding="5">
 <tbody>
@@ -138,6 +147,23 @@ Our 21st annual tournament.
           </div>
         </div>
       </div>
+      <div class="fs-field" id="players-needed-field" style="display:none; margin-left:1.5em;">
+        <label class="fs-label" for="players-needed">Players needed</label>
+        <input
+          class="fs-input"
+          id="players-needed"
+          name="players_needed"
+          type="number"
+          min="0"
+          max="100"
+          step="1"
+          style="max-width:6em"
+          disabled
+        />
+        <p class="fs-description">
+          How many golfers should we find to complete your team(s)?
+        </p>
+      </div>
   </fieldset>
   <fieldset>
     <div class="fs-field">
@@ -157,73 +183,172 @@ Our 21st annual tournament.
       <input class="fs-input" id="member4" name="member4" />
     </div>
   </fieldset>
-  <fieldset>
+  <fieldset class="prices-fieldset">
     <h5>Tournament Prices</h5>
     <br/>
-  <table border="1" width="100%" cellpadding="6" cellspacing="0">
-    <tr>
-      <th>Item</th>
-      <th>Amount</th>
-      <th>Quantity</th>
-      <th>Subtotal</th>
+
+  <style>
+    /* The theme lays fieldsets out as a two-column grid. Everything in this
+       one — the price table, the explanatory notes, the notes box — is
+       full-width content, so it gets a single column at every screen size. */
+    #reg-form fieldset.prices-fieldset { grid-template-columns: 1fr; }
+
+    /* A fieldset's UA default is min-width:min-content, so it refuses to
+       shrink to a narrow screen and drags the whole page sideways with it. */
+    #reg-form fieldset { min-width: 0; }
+
+    .price-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    #price-table { min-width: 30em; }
+
+    .shirt-grid { border-collapse: collapse; margin: 0; }
+    .shirt-grid th,
+    .shirt-grid td { padding: 2px; border: 0; font-size: 0.85em; text-align: center; }
+    .shirt-grid th { font-weight: bold; }
+    .shirt-grid tbody th { text-align: right; white-space: nowrap; }
+    .shirt-grid input { width: 3em; margin: 0; text-align: center; }
+    /* The per-cell size caption is only used by the stacked phone layout. */
+    .shirt-grid td::before { display: none; }
+
+    /* The sidebar keeps the content column under ~575px until roughly 1024px
+       wide, which is narrower than this table can draw itself. Below that the
+       table stacks rather than scrolling sideways in its box. */
+    @media screen and (max-width: 64em) {
+      /* Four columns and a nested 5-across grid cannot fit a phone, so each
+         line item becomes its own stacked block instead of scrolling.
+         Every selector below uses child combinators: a descendant selector
+         rooted at #price-table would outrank the .shirt-grid rules further
+         down on specificity and flatten the nested grid too. */
+      #price-table { min-width: 0; display: block; }
+      #price-table > thead { display: none; }
+      #price-table > tbody,
+      #price-table > tfoot,
+      #price-table > tbody > tr,
+      #price-table > tfoot > tr,
+      #price-table > tbody > tr > td,
+      #price-table > tfoot > tr > th { display: block; width: auto; }
+
+      #price-table > tbody > tr[data-item] { padding: 0.5em 0.75em; border-bottom: 1px solid #ccc; }
+      #price-table > tbody > tr[data-item] > td { border: 0; padding: 0.15em 0; }
+
+      /* Item name leads the block; the rest are labelled inline. */
+      #price-table > tbody > tr > td[data-label="Item"] { font-weight: bold; font-size: 1.05em; }
+      #price-table > tbody > tr > td[data-label="Amount"]::before,
+      #price-table > tbody > tr > td[data-label="Subtotal"]::before { content: attr(data-label) ": "; font-weight: bold; }
+
+      #price-table > tfoot > tr { padding: 0.5em 0.75em; }
+      #price-table > tfoot > tr > th[colspan] { text-align: left !important; }
+
+      /* Shirts: stack the two cuts, wrap the sizes, caption each box. */
+      .shirt-grid,
+      .shirt-grid tbody,
+      .shirt-grid tr { display: block; }
+      .shirt-grid thead { display: none; }
+      .shirt-grid tbody th { display: block; text-align: left; margin: 0.4em 0 0.2em; }
+      .shirt-grid tr { text-align: left; }
+      .shirt-grid td { display: inline-block; width: auto; padding: 0 0.35em 0.3em 0; }
+      .shirt-grid td::before {
+        content: attr(data-size);
+        display: block;
+        font-size: 0.75em;
+        font-weight: bold;
+        text-align: center;
+      }
+      .shirt-grid input { width: 2.9em; }
+    }
+  </style>
+
+  <div class="price-table-wrap">
+  <table border="1" width="100%" cellpadding="6" cellspacing="0" id="price-table">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Amount</th>
+        <th>Quantity</th>
+        <th>Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+    <tr data-item="tournament">
+      <td data-label="Item">Tournament Fee</td>
+      <td data-label="Amount">$125</td>
+      <td data-label="Quantity"><input type="number" name="tournament_fee_qty" min="0" step="1" value="0"></td>
+      <td data-label="Subtotal" class="subtotal">$0</td>
     </tr>
-    <tr>
-      <td>Tournament Fee</td>
-      <td>$125</td>
-      <td><input type="number" name="tournament_fee_qty" min="0" value="0" data-price="125"></td>
-      <td class="subtotal">$0</td>
+    <tr data-item="mulligan">
+      <td data-label="Item">Mulligans (1/Player)</td>
+      <td data-label="Amount">$10</td>
+      <td data-label="Quantity"><input type="number" name="mulligan_qty" min="0" step="1" value="0"></td>
+      <td data-label="Subtotal" class="subtotal">$0</td>
     </tr>
-    <tr>
-      <td>Mulligans (1/Player)</td>
-      <td>$10</td>
-      <td><input type="number" name="mulligan_qty" min="0" value="0" data-price="10"></td>
-      <td class="subtotal">$0</td>
+    <tr data-item="clubs">
+      <td data-label="Item">Club Rentals (LH or RH)</td>
+      <td data-label="Amount">$35</td>
+      <td data-label="Quantity"><input type="number" name="club_rental_qty" min="0" step="1" value="0"></td>
+      <td data-label="Subtotal" class="subtotal">$0</td>
     </tr>
-    <tr>
-      <td>Club Rentals (LH or RH)</td>
-      <td>$35</td>
-      <td><input type="number" name="club_rental_qty" min="0" value="0" data-price="35"></td>
-      <td class="subtotal">$0</td>
+    <tr data-item="sponsor">
+      <td data-label="Item">Corporate Sponsor</td>
+      <td data-label="Amount">$1250</td>
+      <td data-label="Quantity"><input type="number" name="corp_sponsor_qty" min="0" step="1" value="0"></td>
+      <td data-label="Subtotal" class="subtotal">$0</td>
     </tr>
-    <tr>
-      <td>Corporate Sponsor</td>
-      <td>$1250</td>
-      <td><input type="number" name="corp_sponsor_qty" min="0" value="0" data-price="1250"></td>
-      <td class="subtotal">$0</td>
+    <tr data-item="shirt">
+      <td data-label="Item">Shirt w/ Logo</td>
+      <td data-label="Amount">$45</td>
+      <td data-label="Quantity">
+        <table class="shirt-grid">
+          <thead>
+            <tr>
+              <th></th><th>S</th><th>M</th><th>L</th><th>XL</th><th>XXL</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>Men's</th>
+              <td data-size="S"><input type="number" name="shirt_m_s" min="0" step="1" value="0" aria-label="Men's Small"></td>
+              <td data-size="M"><input type="number" name="shirt_m_m" min="0" step="1" value="0" aria-label="Men's Medium"></td>
+              <td data-size="L"><input type="number" name="shirt_m_l" min="0" step="1" value="0" aria-label="Men's Large"></td>
+              <td data-size="XL"><input type="number" name="shirt_m_xl" min="0" step="1" value="0" aria-label="Men's X-Large"></td>
+              <td data-size="XXL"><input type="number" name="shirt_m_xxl" min="0" step="1" value="0" aria-label="Men's XX-Large"></td>
+            </tr>
+            <tr>
+              <th>Women's</th>
+              <td data-size="S"><input type="number" name="shirt_w_s" min="0" step="1" value="0" aria-label="Women's Small"></td>
+              <td data-size="M"><input type="number" name="shirt_w_m" min="0" step="1" value="0" aria-label="Women's Medium"></td>
+              <td data-size="L"><input type="number" name="shirt_w_l" min="0" step="1" value="0" aria-label="Women's Large"></td>
+              <td data-size="XL"><input type="number" name="shirt_w_xl" min="0" step="1" value="0" aria-label="Women's X-Large"></td>
+              <td data-size="XXL"><input type="number" name="shirt_w_xxl" min="0" step="1" value="0" aria-label="Women's XX-Large"></td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+      <td data-label="Subtotal" class="subtotal">$0</td>
     </tr>
-    <tr>
-      <td>Donation</td>
-      <td>$100</td>
-      <td><input type="number" name="donation_qty" min="0" value="0" data-price="100"></td>
-      <td class="subtotal">$0</td>
+    <tr data-item="donation">
+      <td data-label="Item">Extra Donation</td>
+      <td data-label="Amount">any $ counts</td>
+      <td data-label="Quantity">$ <input type="number" name="donation_amount" min="0" step="0.01" placeholder="0.00" style="width:7em"></td>
+      <td data-label="Subtotal" class="subtotal">$0</td>
     </tr>
-    <tr>
-      <td>Shirt w/ Logo (Size in Notes)</td>
-      <td>$45</td>
-      <td><input type="number" name="shirt_qty" min="0" value="0" data-price="45"></td>
-      <td class="subtotal">$0</td>
-    </tr>
-    <tr>
-      <td>Gallery Fee (w/ Dinner)</td>
-      <td>$15</td>
-      <td><input type="number" name="gallery_fee_qty" min="0" value="0" data-price="15"></td>
-      <td class="subtotal">$0</td>
-    </tr>
-    <tr>
-      <th colspan="3" style="text-align:right">Total:</th>
-      <th id="grandTotal">$0</th>
-    </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <th colspan="3" style="text-align:right">Total:</th>
+        <th id="grandTotal">$0</th>
+      </tr>
+    </tfoot>
   </table>
+  </div>
 
   <br/>
-  <!-- Hidden field to pass total to Formspree -->
+  <!-- Hidden field carrying the client-side total; the server recomputes it. -->
   <input type="hidden" name="calculated_total" id="calculatedTotal">
 
   <p style="font-size: 0.8em">Tournament Fee includes Green Fees, Cart, Range Balls, and Dinner</p><br/>
   <p style="font-size: 0.8em">Corporate Sponsorship includes all Tournament Fees for a full foursome. Each additional foursome is an additional $500. Also includes corporate logo signs on the course and displayed during the dinner</p>
   <br/>
   <label>
-    Additional Notes (shirt sizes, special requests, etc.):
+    Additional Notes (special requests, etc.):
     <textarea name="notes" rows="4"></textarea>
   </label><br>
   </fieldset>
@@ -246,112 +371,132 @@ Our 21st annual tournament.
 
 <script>
 (function () {
-  // === Prices (keep in sync with server) ===
+  // === Prices (keep in sync with PRICES in apps-script/registration/Code.js) ===
   const P = {
     tournament: 125,
     mulligan: 10,
     clubs: 35,
     sponsor_first: 1250,
     sponsor_additional: 500,
-    donation: 100,
-    shirt: 45,
-    gallery: 15
+    shirt: 45
   };
 
-  // Elements
   const form = document.getElementById('reg-form');
-  if (!form) return;
+  const table = document.getElementById('price-table');
+  if (!form || !table) return;
 
   const grandEl = document.getElementById('grandTotal');
   const hiddenTotal = document.getElementById('calculatedTotal');
 
-  // Utility
   const toInt = v => {
     const n = Math.floor(Number(v));
     return Number.isFinite(n) && n >= 0 ? n : 0;
   };
+  const toMoney = v => {
+    const n = Number(v);
+    return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : 0;
+  };
   const money = n => '$' + Number(n).toFixed(2);
 
-  // Special sponsor pricing
+  // Sum every quantity box in a row. The shirt row has ten of them; the rest
+  // have one, so this works for both.
+  function rowQty(tr) {
+    let sum = 0;
+    tr.querySelectorAll('input[type="number"]').forEach(i => sum += toInt(i.value));
+    return sum;
+  }
+
+  // First foursome at the base price, each additional one discounted.
   function sponsorCost(q) {
-    q = toInt(q);
     if (q <= 0) return 0;
-    if (q === 1) return P.sponsor_first;
     return P.sponsor_first + (q - 1) * P.sponsor_additional;
   }
 
-  // Compute + render a row's subtotal given the <input> element
-  function updateRowSubtotal(input) {
-    const tr = input.closest('tr');
-    const cell = tr ? tr.querySelector('.subtotal') : null;
-    if (!cell) return 0;
-
-    const name = input.name;
-    const qty = toInt(input.value);
-
-    let subtotal = 0;
-
-    switch (name) {
-      case 'tournament_fee_qty':
-        subtotal = qty * P.tournament; break;
-      case 'mulligan_qty':
-        subtotal = qty * P.mulligan; break;
-      case 'club_rental_qty':
-        subtotal = qty * P.clubs; break;
-      case 'corp_sponsor_qty':
-        subtotal = sponsorCost(qty); break; // <-- special rule here
-      case 'donation_qty':
-        subtotal = qty * P.donation; break;
-      case 'shirt_qty':
-        subtotal = qty * P.shirt; break;
-      case 'gallery_fee_qty':
-        subtotal = qty * P.gallery; break;
-      default:
-        // If you add new rows later, handle them here.
-        subtotal = 0;
+  // Priced rows are tagged with data-item; the total row is not, so it is
+  // skipped automatically.
+  function rowSubtotal(tr) {
+    switch (tr.dataset.item) {
+      case 'tournament': return rowQty(tr) * P.tournament;
+      case 'mulligan':   return rowQty(tr) * P.mulligan;
+      case 'clubs':      return rowQty(tr) * P.clubs;
+      case 'sponsor':    return sponsorCost(rowQty(tr));
+      case 'shirt':      return rowQty(tr) * P.shirt;
+      case 'donation': {
+        const input = tr.querySelector('input[name="donation_amount"]');
+        return input ? toMoney(input.value) : 0;
+      }
+      default: return 0;
     }
-
-    cell.textContent = money(subtotal);
-    return subtotal;
   }
 
-  // Recompute the whole table total
   function recomputeAll() {
     let total = 0;
-    const qtyInputs = form.querySelectorAll(
-      'input[name$="_qty"][type="number"]'
-    );
-    qtyInputs.forEach(input => total += updateRowSubtotal(input));
-
+    table.querySelectorAll('tr[data-item]').forEach(tr => {
+      const subtotal = rowSubtotal(tr);
+      const cell = tr.querySelector('.subtotal');
+      if (cell) cell.textContent = money(subtotal);
+      total += subtotal;
+    });
+    total = Math.round(total * 100) / 100;
     if (grandEl) grandEl.textContent = money(total);
     if (hiddenTotal) hiddenTotal.value = total.toFixed(2);
   }
 
-  // Hook up listeners
-  form.addEventListener('input', function (e) {
-    const t = e.target;
-    if (t && t.matches('input[name$="_qty"][type="number"]')) {
-      // Clamp to non-negative integers
-      t.value = String(toInt(t.value));
-      // Update only this row, then total
-      updateRowSubtotal(t);
-      // Recompute grand (cheap, keeps things consistent)
-      let total = 0;
-      form.querySelectorAll('input[name$="_qty"][type="number"]').forEach(inp => {
-        const tr = inp.closest('tr');
-        const cell = tr ? tr.querySelector('.subtotal') : null;
-        if (!cell) return;
-        // We already updated changed row; add all visible subtotals
-        const val = Number((cell.textContent || '0').replace(/[^0-9.]/g, '')) || 0;
-        total += val;
-      });
-      if (grandEl) grandEl.textContent = money(total);
-      if (hiddenTotal) hiddenTotal.value = total.toFixed(2);
-    }
+  // One listener on the table covers every current and future quantity box.
+  // Values are left exactly as typed — min/step attributes block bad input at
+  // submit time, and the server validates independently.
+  table.addEventListener('input', function (e) {
+    if (e.target && e.target.matches('input[type="number"]')) recomputeAll();
   });
 
-  // Initial compute on load (in case there are preset values)
+  // Initial compute, which also picks up values the browser restored on a
+  // back-navigation.
   recomputeAll();
+})();
+</script>
+
+<script>
+(function () {
+  // The "Assign Me a Team" checkbox does double duty: an individual asking to
+  // be placed on a team, or a corporate sponsor asking us to find golfers to
+  // fill their foursome. Relabel it to match, and reveal the count field only
+  // in the sponsor case.
+  const form = document.getElementById('reg-form');
+  if (!form) return;
+
+  const checkbox = document.getElementById('reg-assign-individual');
+  const label = document.querySelector('label[for="reg-assign-individual"]');
+  const field = document.getElementById('players-needed-field');
+  const input = document.getElementById('players-needed');
+  if (!checkbox || !label || !field || !input) return;
+
+  const LABELS = {
+    'corp-sponsor': 'We need help filling our team',
+    'default': 'Assign Me a Team'
+  };
+
+  function sync() {
+    const picked = form.querySelector('input[name="registration_type"]:checked');
+    const type = picked ? picked.value : '';
+    const isSponsor = type === 'corp-sponsor';
+
+    label.textContent = LABELS[type] || LABELS.default;
+
+    const wantsPlayers = isSponsor && checkbox.checked;
+    field.style.display = wantsPlayers ? '' : 'none';
+    // A disabled input is not submitted, so an individual entry never sends a
+    // stray players_needed value.
+    input.disabled = !wantsPlayers;
+    if (!wantsPlayers) input.value = '';
+  }
+
+  form.addEventListener('change', function (e) {
+    if (e.target && e.target.matches(
+      'input[name="registration_type"], #reg-assign-individual'
+    )) sync();
+  });
+
+  sync();
 })();
 </script>
 
@@ -360,8 +505,7 @@ Our 21st annual tournament.
 1. Donations (Cash, Check, or Credit Card)
 2. Corporate Sponsorship (Click on “Contact Us” at the bottom of the page for details.)
 3. Individual Tournament  Fees
-4. Gallery tickets
-5. Volunteers
+4. Volunteers
 
 #### Methods of Payment/Donation
 1. Preferred method of payment is to use the PayPal link below to electronically transfer funds from your bank account or credit card.

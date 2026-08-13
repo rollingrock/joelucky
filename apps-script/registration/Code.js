@@ -32,18 +32,83 @@ function organizerReplyTo_() {
 /***** PRICES — single source of truth *****
  * Keep in sync with the P object in pages/registration.md.
  * Order matters: QTY_FIELDS drives the spreadsheet column order.
+ *
+ * kind:
+ *   "qty"    quantity x price
+ *   "tiered" first unit at price, each additional at `additional`
+ *   "amount" the submitted value IS the dollar figure (no unit price)
  */
+const SHIRT_PRICE = 45;
+const MAX_DONATION = 100000;
+
 const PRICES = {
-  tournament_fee_qty: { label: "Tournament Fee",           price: 125 },
-  mulligan_qty:       { label: "Mulligans",                price: 10 },
-  club_rental_qty:    { label: "Club Rentals",             price: 35 },
-  corp_sponsor_qty:   { label: "Corporate Sponsor",        price: 1250, additional: 500 },
-  donation_qty:       { label: "Donation",                 price: 100 },
-  shirt_qty:          { label: "Shirt w/ Logo",            price: 45 },
-  gallery_fee_qty:    { label: "Gallery Fee (w/ Dinner)",  price: 15 }
+  tournament_fee_qty: { label: "Tournament Fee",    kind: "qty",    price: 125 },
+  mulligan_qty:       { label: "Mulligans",         kind: "qty",    price: 10 },
+  club_rental_qty:    { label: "Club Rentals",      kind: "qty",    price: 35 },
+  corp_sponsor_qty:   { label: "Corporate Sponsor", kind: "tiered", price: 1250, additional: 500 },
+
+  // Shirts are ten separate columns so the committee can SUM each size across
+  // every registration when placing the order. They share one price and are
+  // rolled up into a single line in the notification emails.
+  shirt_m_s:   { label: "Shirt — Men's S",     kind: "qty", price: SHIRT_PRICE, shirt: { cut: "Men's",   size: "S"   } },
+  shirt_m_m:   { label: "Shirt — Men's M",     kind: "qty", price: SHIRT_PRICE, shirt: { cut: "Men's",   size: "M"   } },
+  shirt_m_l:   { label: "Shirt — Men's L",     kind: "qty", price: SHIRT_PRICE, shirt: { cut: "Men's",   size: "L"   } },
+  shirt_m_xl:  { label: "Shirt — Men's XL",    kind: "qty", price: SHIRT_PRICE, shirt: { cut: "Men's",   size: "XL"  } },
+  shirt_m_xxl: { label: "Shirt — Men's XXL",   kind: "qty", price: SHIRT_PRICE, shirt: { cut: "Men's",   size: "XXL" } },
+  shirt_w_s:   { label: "Shirt — Women's S",   kind: "qty", price: SHIRT_PRICE, shirt: { cut: "Women's", size: "S"   } },
+  shirt_w_m:   { label: "Shirt — Women's M",   kind: "qty", price: SHIRT_PRICE, shirt: { cut: "Women's", size: "M"   } },
+  shirt_w_l:   { label: "Shirt — Women's L",   kind: "qty", price: SHIRT_PRICE, shirt: { cut: "Women's", size: "L"   } },
+  shirt_w_xl:  { label: "Shirt — Women's XL",  kind: "qty", price: SHIRT_PRICE, shirt: { cut: "Women's", size: "XL"  } },
+  shirt_w_xxl: { label: "Shirt — Women's XXL", kind: "qty", price: SHIRT_PRICE, shirt: { cut: "Women's", size: "XXL" } },
+
+  donation_amount:    { label: "Extra Donation",    kind: "amount" }
 };
 
 const QTY_FIELDS = Object.keys(PRICES);
+const SHIRT_FIELDS = QTY_FIELDS.filter(function (f) { return !!PRICES[f].shirt; });
+
+/***** SHEET LAYOUT *****
+ * appendRow writes positionally and never consults the header row, so this
+ * list and the row built in doPost must stay in lockstep. doPost asserts the
+ * lengths match rather than trusting that they do.
+ */
+const HEADERS = [
+  "timestamp", "registration_type", "assign_individual", "players_needed",
+  "team_name", "contact_name", "contact_email", "contact_phone",
+  "member1", "member2", "member3", "member4"
+].concat(QTY_FIELDS).concat([
+  "calculated_total", "client_total", "server_total", "total_tampered", "notes"
+]);
+
+/***** WRITE THE HEADER ROW *****
+ * Run this once from the editor when rolling over to a new sheet, or after
+ * adding/removing/reordering a priced line item. It refuses to run if the
+ * sheet already holds submissions, since rewriting headers over existing rows
+ * would relabel data that was written to the old layout — in that case add or
+ * move the columns by hand instead.
+ */
+function writeHeaders() {
+  var sheet = targetSheet_();
+  var dataRows = sheet.getLastRow() - 1;
+  if (dataRows > 0) {
+    throw new Error(
+      "Refusing to rewrite headers: the sheet already has " + dataRows +
+      " submission(s). Adjust the columns by hand so existing rows stay " +
+      "aligned with their values."
+    );
+  }
+
+  sheet.getRange(1, 1, 1, sheet.getMaxColumns() >= HEADERS.length
+                            ? sheet.getMaxColumns() : HEADERS.length).clearContent();
+  sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]).setFontWeight("bold");
+  sheet.setFrozenRows(1);
+
+  var text = "Wrote " + HEADERS.length + " headers to " +
+             sheet.getParent().getName() + " / " + sheet.getName() + ":\n" +
+             HEADERS.join("  ");
+  console.log(text);
+  return text;
+}
 
 /***** SETUP CHECK *****
  * Run this from the editor after changing the CONFIG block or the Script
@@ -66,7 +131,7 @@ function checkSetup() {
 
   var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn())
                      .getValues()[0].map(String);
-  var missing = QTY_FIELDS.filter(function (f) {
+  var missing = QTY_FIELDS.concat(["players_needed"]).filter(function (f) {
     return headers.indexOf(f) === -1;
   });
   if (missing.length) {
@@ -115,13 +180,18 @@ function doPost(e) {
     new Date(),
     data.registration_type || "",
     data.assign_individual ? "Yes" : "No",
+    asInt_(data.players_needed),
     data.team_name || "",
     data.contact_name || "",
     data.contact_email || "",
     data.contact_phone || ""
   ];
   row.push(data.member1 || "", data.member2 || "", data.member3 || "", data.member4 || "");
-  QTY_FIELDS.forEach(function (f) { row.push(asInt_(data[f])); });
+  // Quantities write as integers; the Extra Donation writes as a dollar amount
+  // so cents are not silently truncated out of the sheet.
+  QTY_FIELDS.forEach(function (f) {
+    row.push(PRICES[f].kind === "amount" ? asMoney_(data[f]) : asInt_(data[f]));
+  });
   row.push(
     serverTotal.toFixed(2),   // calculated_total = authoritative server total
     Number.isFinite(clientTotal) ? clientTotal.toFixed(2) : String(clientTotal),
@@ -129,6 +199,10 @@ function doPost(e) {
     tampered,                 // total_tampered (Yes/No)
     data.notes || ""
   );
+  if (row.length !== HEADERS.length) {
+    throw new Error("Row/header mismatch: built " + row.length + " cells for " +
+                    HEADERS.length + " columns.");
+  }
   sheet.appendRow(row);
 
   // Send admin notification
@@ -186,13 +260,24 @@ function validate_(d) {
   var digits = (d.contact_phone || "").replace(/\D/g, "");
   if (digits.length < 10) return { ok:false, err:"phone" };
 
-  // Quantity fields must be ints >= 0
+  // Quantity fields must be ints >= 0; the Extra Donation is a dollar amount,
+  // so it may carry cents.
   var anyQty = false;
   for (var j = 0; j < QTY_FIELDS.length; j++) {
-    var q = Number(d[QTY_FIELDS[j]] || 0);
-    if (!Number.isFinite(q) || q < 0 || Math.floor(q) !== q) return { ok:false, err:"qty" };
-    if (q > 0) anyQty = true;
+    var field = QTY_FIELDS[j];
+    var n = Number(d[field] || 0);
+    if (PRICES[field].kind === "amount") {
+      if (!Number.isFinite(n) || n < 0 || n > MAX_DONATION) return { ok:false, err:"amount" };
+    } else {
+      if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) return { ok:false, err:"qty" };
+    }
+    if (n > 0) anyQty = true;
   }
+
+  // Corporate sponsors may ask us to find golfers to complete their team.
+  var players = Number(d.players_needed || 0);
+  if (!Number.isFinite(players) || players < 0 || players > 100 ||
+      Math.floor(players) !== players) return { ok:false, err:"players" };
 
   // At least one intent (nonzero qty or some notes)
   if (!anyQty && (!d.notes || String(d.notes).trim() === "")) return { ok:false, err:"emptyorder" };
@@ -251,32 +336,59 @@ function buildHtmlSummary_(data, forAdmin) {
       escapeHtml_(value || "") + "</td></tr>";
   }
 
-  function qtyRow(field) {
-    const spec = PRICES[field];
-    const q = asInt_(data[field]);
-    if (!q) return "";
-
-    const subtotal = lineSubtotal_(field, q);
-    const detail = spec.additional
-      ? (q === 1
-          ? "1 foursome @ " + toCurrency_(spec.price)
-          : "1 foursome @ " + toCurrency_(spec.price) + " + " + (q - 1) +
-            " additional @ " + toCurrency_(spec.additional))
-      : "Qty: " + q + " @ " + toCurrency_(spec.price);
-
+  function itemRow(label, detail, subtotal) {
     return "<tr>" +
             "<td style='padding:6px;border-bottom:1px solid #eee;'>" +
-              escapeHtml_(spec.label + " (" + toCurrency_(spec.price) + ")") + "</td>" +
+              escapeHtml_(label) + "</td>" +
             "<td style='padding:6px;border-bottom:1px solid #eee;'>" +
               escapeHtml_(detail) + " — Subtotal: " + toCurrency_(subtotal) +
             "</td>" +
           "</tr>";
   }
 
+  function qtyRow(field) {
+    const spec = PRICES[field];
+
+    if (spec.kind === "amount") {
+      const amount = asMoney_(data[field]);
+      if (!amount) return "";
+      return itemRow(spec.label, "Any amount", amount);
+    }
+
+    const q = asInt_(data[field]);
+    if (!q) return "";
+
+    const detail = spec.kind === "tiered"
+      ? (q === 1
+          ? "1 foursome @ " + toCurrency_(spec.price)
+          : "1 foursome @ " + toCurrency_(spec.price) + " + " + (q - 1) +
+            " additional @ " + toCurrency_(spec.additional))
+      : "Qty: " + q + " @ " + toCurrency_(spec.price);
+
+    return itemRow(spec.label + " (" + toCurrency_(spec.price) + ")",
+                   detail, lineSubtotal_(field, q));
+  }
+
+  // Ten shirt columns would drown the email, so they collapse to one line.
+  function shirtRow() {
+    const count = shirtCount_(data);
+    if (!count) return "";
+    return itemRow("Shirts w/ Logo (" + toCurrency_(SHIRT_PRICE) + ")",
+                   count + " total — " + shirtBreakdown_(data),
+                   count * SHIRT_PRICE);
+  }
+
+  // The "assign me a team" checkbox means something different depending on who
+  // ticked it.
+  const isSponsor = data.registration_type === "corp-sponsor";
+  const assignLabel = isSponsor ? "Needs Help Filling Team" : "Assign Me a Team";
+  const players = asInt_(data.players_needed);
+
   const top =
     "<table cellpadding='0' cellspacing='0' style='border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;width:100%;max-width:640px'>" +
     row("Registration Type", data.registration_type) +
-    row("Assign Me a Team", data.assign_individual ? "Yes" : "No") +
+    row(assignLabel, data.assign_individual ? "Yes" : "No") +
+    (players ? row("Players Needed", String(players)) : "") +
     row("Team Name", data.team_name) +
     row("Contact Name", data.contact_name) +
     row("Contact Email", data.contact_email) +
@@ -288,10 +400,20 @@ function buildHtmlSummary_(data, forAdmin) {
     row("Notes", data.notes) +
     "</table>";
 
+  // Walk QTY_FIELDS in order, substituting the single rolled-up shirt line
+  // where the first shirt column would have appeared.
+  var shirtEmitted = false;
+  const itemRows = QTY_FIELDS.map(function (field) {
+    if (!PRICES[field].shirt) return qtyRow(field);
+    if (shirtEmitted) return "";
+    shirtEmitted = true;
+    return shirtRow();
+  }).join("");
+
   const items =
     "<h3 style='font-family:Arial,sans-serif'>Selected Items</h3>" +
     "<table cellpadding='0' cellspacing='0' style='border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;width:100%;max-width:640px'>" +
-    QTY_FIELDS.map(qtyRow).join("") +
+    itemRows +
     (total ? "<tr><th align='left' style='padding:8px;border-top:2px solid #000;'>Total</th><th align='left' style='padding:8px;border-top:2px solid #000;'>" + total + "</th></tr>" : "") +
     "</table>";
 
@@ -324,15 +446,46 @@ function asInt_(v) {
   return Math.floor(n);
 }
 
-// Subtotal for one line item. Corporate Sponsor is the only tiered rule:
-// first foursome at the base price, each additional at PRICES.*.additional.
-function lineSubtotal_(field, qty) {
+// Dollar amount entered directly by the registrant (Extra Donation), rounded
+// to cents and clamped to a sane ceiling.
+function asMoney_(v) {
+  var n = Number(v);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.min(Math.round(n * 100) / 100, MAX_DONATION);
+}
+
+// Subtotal for one line item, per the spec's `kind`.
+function lineSubtotal_(field, value) {
   var spec = PRICES[field];
   if (!spec) return 0;
-  var q = asInt_(qty);
+
+  if (spec.kind === "amount") return asMoney_(value);
+
+  var q = asInt_(value);
   if (q <= 0) return 0;
-  if (spec.additional) return spec.price + (q - 1) * spec.additional;
+  if (spec.kind === "tiered") return spec.price + (q - 1) * spec.additional;
   return q * spec.price;
+}
+
+// "Men's: 2 M, 1 L; Women's: 1 XXL" — for the emails only; the spreadsheet
+// keeps one column per size.
+function shirtBreakdown_(d) {
+  var groups = {};
+  var order = [];
+  SHIRT_FIELDS.forEach(function (f) {
+    var q = asInt_(d[f]);
+    if (!q) return;
+    var cut = PRICES[f].shirt.cut;
+    if (!groups[cut]) { groups[cut] = []; order.push(cut); }
+    groups[cut].push(q + " " + PRICES[f].shirt.size);
+  });
+  return order.map(function (cut) {
+    return cut + ": " + groups[cut].join(", ");
+  }).join("; ");
+}
+
+function shirtCount_(d) {
+  return SHIRT_FIELDS.reduce(function (sum, f) { return sum + asInt_(d[f]); }, 0);
 }
 
 function computeServerTotal_(d) {
