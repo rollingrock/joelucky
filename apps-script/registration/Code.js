@@ -12,6 +12,14 @@ const ORG_NAME       = "Joe Lucky Memorial Golf Tournament";
 const SEND_AUTOREPLY = true;
 const THANKYOU_URL   = "https://jlmgt.org/thank-you/";
 
+// A registration arrived three times in three seconds because the submitter
+// tapped Submit again while waiting on a slow response. Identical payloads
+// inside this window are treated as the same submission and dropped.
+// Consequence worth knowing: two genuinely identical registrations sent
+// minutes apart would collapse into one. Anything differing by a single
+// character — name, phone, quantity — is a distinct submission and unaffected.
+const DEDUPE_WINDOW_SECONDS = 180;
+
 // Recipient addresses live in Script Properties, not in this file — the site
 // repo is public. Set these under Project Settings › Script Properties:
 //   ADMIN_EMAILS        comma-separated notification list
@@ -168,13 +176,42 @@ function doPost(e) {
     return ContentService.createTextOutput("Invalid submission.");
   }
 
+  // 3) Collapse duplicates. The lock matters as much as the cache: three
+  // rapid submissions can run concurrently, and without it all three would
+  // check the cache before any of them wrote to it.
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(30000);
+  } catch (err) {
+    console.error("Could not acquire lock:", err);
+    return doneResponse_();
+  }
+
+  try {
+    var cache = CacheService.getScriptCache();
+    var fingerprint = submissionFingerprint_(data);
+    if (cache.get(fingerprint)) {
+      console.log("Duplicate submission suppressed: " + (data.team_name || "") +
+                  " / " + (data.contact_email || ""));
+      return doneResponse_();
+    }
+    cache.put(fingerprint, "1", DEDUPE_WINDOW_SECONDS);
+
+    return recordSubmission_(data);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Everything that actually persists or notifies, run once per unique
+// submission under the lock held by doPost.
+function recordSubmission_(data) {
   // Totals
   var serverTotal = computeServerTotal_(data);
   var clientTotal = Number(data.calculated_total || 0);
   var tampered = !Number.isFinite(clientTotal) ||
                  Math.abs(serverTotal - clientTotal) > 0.01 ? "Yes" : "No";
 
-  // 3) Save only valid submissions
   var sheet = targetSheet_();
   var row = [
     new Date(),
@@ -221,7 +258,12 @@ function doPost(e) {
     }
   }
 
-  // Return simple success or redirect to thank-you page
+  return doneResponse_();
+}
+
+// A suppressed duplicate gets the same answer a fresh submission does — the
+// submitter did nothing wrong and should not be told anything is amiss.
+function doneResponse_() {
   if (THANKYOU_URL) {
     return HtmlService.createHtmlOutput(
       '<!doctype html><meta http-equiv="refresh" content="0; url=' + THANKYOU_URL + '">' +
@@ -231,6 +273,28 @@ function doPost(e) {
   return ContentService
     .createTextOutput("Success! Your registration has been recorded.")
     .setMimeType(ContentService.MimeType.TEXT);
+}
+
+// Identifies a submission by its content. Deliberately excludes form_started
+// and elapsed_ms: those differ between a resubmission and the original, which
+// is exactly what needs to collapse.
+function submissionFingerprint_(d) {
+  var parts = [
+    d.registration_type, d.assign_individual, d.players_needed,
+    d.team_name, d.contact_name, d.contact_email, d.contact_phone,
+    d.member1, d.member2, d.member3, d.member4, d.notes
+  ].concat(QTY_FIELDS.map(function (f) { return d[f]; }));
+
+  // JSON encoding keeps the fields unambiguously separated, so shifting
+  // characters between adjacent values cannot produce the same string.
+  var raw = JSON.stringify(parts.map(function (p) {
+    return String(p == null ? "" : p).trim();
+  }));
+  var digest = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, raw,
+                                       Utilities.Charset.UTF_8);
+  return "reg_" + digest.map(function (b) {
+    return ((b & 0xFF) + 0x100).toString(16).slice(1);
+  }).join("");
 }
 
 function targetSheet_() {

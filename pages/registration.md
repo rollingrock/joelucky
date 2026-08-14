@@ -363,8 +363,33 @@ Our 21st annual tournament.
     var start = Date.now();
     document.getElementById('form_started').value = String(start);
     var form = document.getElementById('reg-form');
-    form.addEventListener('submit', function(){
+    var button = form.querySelector('button[type="submit"]');
+    var submitting = false;
+
+    form.addEventListener('submit', function(e){
+      // The endpoint takes a second or two to answer and the page gives no
+      // sign it is working, so a registration was submitted three times by
+      // someone tapping Submit again. Let the first one through and swallow
+      // the rest.
+      if (submitting) { e.preventDefault(); return; }
+      submitting = true;
+
       document.getElementById('elapsed_ms').value = String(Date.now() - start);
+
+      if (button) {
+        button.textContent = 'Submitting…';
+        // Disable on the next tick: a disabled control is omitted from the
+        // submission, and doing it inline can drop the button from the POST.
+        setTimeout(function(){ button.disabled = true; }, 0);
+      }
+    });
+
+    // Restoring from the back/forward cache would otherwise leave a dead,
+    // permanently disabled button.
+    window.addEventListener('pageshow', function(e){
+      if (!e.persisted) return;
+      submitting = false;
+      if (button) { button.disabled = false; button.textContent = 'Submit'; }
     });
   })();
 </script>
