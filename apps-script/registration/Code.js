@@ -180,11 +180,19 @@ function doPost(e) {
   // rapid submissions can run concurrently, and without it all three would
   // check the cache before any of them wrote to it.
   var lock = LockService.getScriptLock();
+  var locked = false;
   try {
-    lock.waitLock(30000);
+    locked = lock.tryLock(30000);
   } catch (err) {
-    console.error("Could not acquire lock:", err);
-    return doneResponse_();
+    console.error("Lock error:", err);
+  }
+
+  if (!locked) {
+    // Record it anyway rather than dropping it. A duplicate row can be
+    // deleted afterwards; a registration that was accepted, acknowledged with
+    // a thank-you page, and never written is gone with nobody any the wiser.
+    console.warn("Proceeding without the dedupe lock.");
+    return recordSubmission_(data);
   }
 
   try {
@@ -195,9 +203,14 @@ function doPost(e) {
                   " / " + (data.contact_email || ""));
       return doneResponse_();
     }
-    cache.put(fingerprint, "1", DEDUPE_WINDOW_SECONDS);
 
-    return recordSubmission_(data);
+    var response = recordSubmission_(data);
+    // Marked as seen only once it is actually saved. Caching first would mean
+    // a failed append poisons the window: the submitter retries, is told
+    // "duplicate", and the registration is lost. Safe to do after the write
+    // because the lock is still held, so no concurrent run can slip past.
+    cache.put(fingerprint, "1", DEDUPE_WINDOW_SECONDS);
+    return response;
   } finally {
     lock.releaseLock();
   }
