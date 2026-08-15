@@ -314,7 +314,7 @@ Our 21st annual tournament.
       <td data-label="Subtotal" class="subtotal">$0</td>
     </tr>
     <tr class="item-detail">
-      <td colspan="4">Per player — green fees, half cart, range balls, and
+      <td colspan="4">Per player — green fees, golf cart, range balls, and
       dinner. <strong>Entering a full team? Set the quantity to 4.</strong> A
       corporate sponsorship is not required to enter a team.</td>
     </tr>
@@ -345,7 +345,7 @@ Our 21st annual tournament.
     <tr class="item-detail">
       <td colspan="4">An optional level of support — <strong>not required to
       enter a team</strong>. Includes your corporate logo on a golf hole plus
-      golf for 4 players, half carts, range balls, and dinner, so no separate
+      golf for 4 players, golf carts, range balls, and dinner, so no separate
       tournament fee is needed. Each additional foursome $500.</td>
     </tr>
     <tr data-item="shirt">
