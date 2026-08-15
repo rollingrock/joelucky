@@ -56,25 +56,25 @@ Our 21st annual tournament.
         Please check which applies
       </label>
       <p class="fs-description">
-        Entering a team? Choose <strong>Individual Entry</strong> — one
-        registration covers your whole foursome, and you set the number of
-        players further down. <strong>Corporate Sponsor</strong> is a separate,
-        optional level of support and is not required to enter a team.
+        Teams and individuals both register at <strong>$125 per player</strong>.
+        A <strong>Corporate Sponsorship</strong> covers a team of 4 on its own —
+        add it in the price table below, where no separate tournament fee is
+        then needed.
       </p>
       <div class="fs-checkbox-group">
         <div class="fs-checkbox-field">
           <div class="fs-checkbox-wrapper">
             <input
               class="fs-checkbox"
-              id="regtype-corp-sponsor"
+              id="regtype-team-entry"
               name="registration_type"
               required
               type="radio"
-              value="corp-sponsor"
+              value="team-entry"
             />
           </div>
           <div>
-            <label class="fs-label" for="regtype-corp-sponsor">Corporate Sponsor</label>
+            <label class="fs-label" for="regtype-team-entry">Registering a Team</label>
           </div>
         </div>
         <div class="fs-checkbox-field">
@@ -88,31 +88,31 @@ Our 21st annual tournament.
             />
           </div>
           <div>
-            <label class="fs-label" for="regtype-individual-entry">Individual Entry</label>
+            <label class="fs-label" for="regtype-individual-entry">Registering as an Individual</label>
           </div>
         </div>
         <div class="fs-checkbox-field">
           <div class="fs-checkbox-wrapper">
             <input
               class="fs-checkbox"
-              id="regtype-donation"
+              id="regtype-not-playing"
               name="registration_type"
               type="radio"
-              value="donation"
+              value="not-playing"
             />
           </div>
           <div>
-            <label class="fs-label" for="regtype-donation">Donation</label>
+            <label class="fs-label" for="regtype-not-playing">Not Playing (sponsorship or donation only)</label>
           </div>
         </div>
       </div>
     </div>
   </fieldset>
   <fieldset>
-    <div class="fs-field">
+    <div class="fs-field" id="team-name-field">
       <label class="fs-label" for="team-name">Team Name</label>
       <input class="fs-input" id="team-name" name="team_name" required />
-      <p class="fs-description">
+      <p class="fs-description" id="team-name-help">
         Team Name for the Event
       </p>
     </div>
@@ -137,7 +137,7 @@ Our 21st annual tournament.
         required
       />
     </div>
-      <div class="fs-checkbox-group">
+      <div class="fs-checkbox-group" id="assign-field">
         <div class="fs-checkbox-field">
           <div class="fs-checkbox-wrapper">
             <input
@@ -544,37 +544,48 @@ Our 21st annual tournament.
 
 <script>
 (function () {
-  // The "Assign Me a Team" checkbox does double duty: an individual asking to
-  // be placed on a team, or a corporate sponsor asking us to find golfers to
-  // fill their foursome. Relabel it to match, and reveal the count field only
-  // in the sponsor case.
+  // The registration type asks one question — are you entering a team, an
+  // individual, or neither — and the rest of this fieldset follows from it.
+  // Corporate sponsorship is deliberately not one of the choices: it is a
+  // funding level, already captured by its own line item, and offering it
+  // here implied it was the way to enter a team.
   const form = document.getElementById('reg-form');
   if (!form) return;
 
   const checkbox = document.getElementById('reg-assign-individual');
   const label = document.querySelector('label[for="reg-assign-individual"]');
-  const field = document.getElementById('players-needed-field');
-  const input = document.getElementById('players-needed');
-  if (!checkbox || !label || !field || !input) return;
-
-  const LABELS = {
-    'corp-sponsor': 'We need help filling our team',
-    'default': 'Assign Me a Team'
-  };
+  const assignField = document.getElementById('assign-field');
+  const playersField = document.getElementById('players-needed-field');
+  const playersInput = document.getElementById('players-needed');
+  const teamName = document.getElementById('team-name');
+  const teamHelp = document.getElementById('team-name-help');
+  if (!checkbox || !label || !assignField || !playersField || !playersInput ||
+      !teamName || !teamHelp) return;
 
   function sync() {
     const picked = form.querySelector('input[name="registration_type"]:checked');
     const type = picked ? picked.value : '';
-    const isSponsor = type === 'corp-sponsor';
+    const isTeam = type === 'team-entry';
+    const isIndividual = type === 'individual-entry';
+    const isPlaying = isTeam || isIndividual;
 
-    label.textContent = LABELS[type] || LABELS.default;
+    // Any team short of players can ask us to fill it, not only sponsors.
+    label.textContent = isTeam ? 'We need help filling our team'
+                               : 'Assign Me a Team';
+    assignField.style.display = isPlaying ? '' : 'none';
+    if (!isPlaying) checkbox.checked = false;
 
-    const wantsPlayers = isSponsor && checkbox.checked;
-    field.style.display = wantsPlayers ? '' : 'none';
-    // A disabled input is not submitted, so an individual entry never sends a
-    // stray players_needed value.
-    input.disabled = !wantsPlayers;
-    if (!wantsPlayers) input.value = '';
+    const wantsPlayers = isTeam && checkbox.checked;
+    playersField.style.display = wantsPlayers ? '' : 'none';
+    // A disabled input is not submitted, so nothing sends a stray value.
+    playersInput.disabled = !wantsPlayers;
+    if (!wantsPlayers) playersInput.value = '';
+
+    // Someone who is not playing has no team to name, so stop demanding one.
+    teamName.required = isPlaying;
+    teamHelp.textContent = isTeam ? 'Team Name for the Event'
+      : isIndividual ? 'Team Name for the Event, if you have one'
+      : 'Optional — your company name, if this is a sponsorship';
   }
 
   form.addEventListener('change', function (e) {

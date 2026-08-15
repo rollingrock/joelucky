@@ -308,15 +308,23 @@ function targetSheet_() {
 
 /****Validate Data*****/
 function validate_(d) {
-  // Required fields
-  var required = ["registration_type", "team_name", "contact_name", "contact_email", "contact_phone"];
+  // Required fields. A team name is only meaningful for someone who is
+  // playing — a sponsor or donor who is not has no team to name.
+  var required = ["registration_type", "contact_name", "contact_email", "contact_phone"];
+  if (d.registration_type !== "not-playing") required.push("team_name");
   for (var i = 0; i < required.length; i++) {
     var k = required[i];
     if (!d[k] || String(d[k]).trim() === "") return { ok: false, err: "missing:" + k };
   }
 
-  // Allowed registration types
-  var allowedTypes = { "corp-sponsor":1, "individual-entry":1, "donation":1 };
+  // Allowed registration types. The first three are current. "corp-sponsor"
+  // and "donation" are the retired labels, still accepted because a browser
+  // holding the previous page in cache would otherwise have a real
+  // registration silently rejected.
+  var allowedTypes = {
+    "team-entry":1, "individual-entry":1, "not-playing":1,
+    "corp-sponsor":1, "donation":1
+  };
   if (!allowedTypes[d.registration_type]) return { ok:false, err:"badtype" };
 
   // Basic email/phone sanity
@@ -443,9 +451,11 @@ function buildHtmlSummary_(data, forAdmin) {
   }
 
   // The "assign me a team" checkbox means something different depending on who
-  // ticked it.
-  const isSponsor = data.registration_type === "corp-sponsor";
-  const assignLabel = isSponsor ? "Needs Help Filling Team" : "Assign Me a Team";
+  // ticked it. "corp-sponsor" is the retired type that used to carry the
+  // team-side meaning, kept here so older rows still read correctly.
+  const isTeam = data.registration_type === "team-entry" ||
+                 data.registration_type === "corp-sponsor";
+  const assignLabel = isTeam ? "Needs Help Filling Team" : "Assign Me a Team";
   const players = asInt_(data.players_needed);
 
   const top =
