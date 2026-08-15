@@ -25,7 +25,7 @@ header:
 <tbody>
 <tr><td>When: </td><td>Thursday, October 1st 2026</td></tr>
 <tr><td>Where: </td><td>Sherrill Park Golf Course, Course #1<br/>2001 East Lookout Drive<br/>Richardson, Tx 75082<br/>972-234-1416</td></tr>
-<tr><td>Start Time: </td><td>11:00 AM Check-in<br/>12:00 PM Shotgun Start<br/>Dinner Afterwards</td></tr>
+<tr><td>Start Time: </td><td>10:30 AM Check-in<br/>12:00 PM Shotgun Start<br/>Dinner Afterwards</td></tr>
 </tbody></table>
 
 #### For Information or Questions
@@ -55,6 +55,12 @@ Our 21st annual tournament.
       <label class="fs-label">
         Please check which applies
       </label>
+      <p class="fs-description">
+        Entering a team? Choose <strong>Individual Entry</strong> — one
+        registration covers your whole foursome, and you set the number of
+        players further down. <strong>Corporate Sponsor</strong> is a separate,
+        optional level of support and is not required to enter a team.
+      </p>
       <div class="fs-checkbox-group">
         <div class="fs-checkbox-field">
           <div class="fs-checkbox-wrapper">
@@ -200,6 +206,30 @@ Our 21st annual tournament.
     .price-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     #price-table { min-width: 30em; }
 
+    /* Foundation stretches form inputs to width:100%, which makes the Quantity
+       column greedy and squeezes the item descriptions into a narrow ribbon.
+       Direct-child scoped so the nested shirt grid keeps its own sizing. */
+    #price-table > tbody > tr > td > input[type="number"] { width: 6em; }
+    #price-table > thead > tr > th:first-child { width: 42%; }
+
+    /* What each line item buys. A registrant asked whether $125 covered a
+       foursome or one player, so this belongs with the row rather than in
+       small print under the table. It gets a full-width row of its own: the
+       Item column is far too narrow to read a sentence in. */
+    #price-table > tbody > tr.item-detail > td {
+      border-top: 0;
+      padding-top: 0;
+      font-size: 0.8em;
+      line-height: 1.45;
+      color: #555;
+    }
+    .item-unit {
+      display: block;
+      font-weight: normal;
+      font-size: 0.78em;
+      color: #555;
+    }
+
     .shirt-grid { border-collapse: collapse; margin: 0; }
     .shirt-grid th,
     .shirt-grid td { padding: 2px; border: 0; font-size: 0.85em; text-align: center; }
@@ -227,8 +257,17 @@ Our 21st annual tournament.
       #price-table > tbody > tr > td,
       #price-table > tfoot > tr > th { display: block; width: auto; }
 
-      #price-table > tbody > tr[data-item] { padding: 0.5em 0.75em; border-bottom: 1px solid #ccc; }
+      /* Stacked, the description must stay visually inside its item's block,
+         so the separating border moves to the detail row that follows. Every
+         priced row has one, which keeps the borders even. */
+      #price-table > tbody > tr[data-item] { padding: 0.5em 0.75em 0; }
       #price-table > tbody > tr[data-item] > td { border: 0; padding: 0.15em 0; }
+      #price-table > tbody > tr.item-detail { padding: 0 0.75em 0.6em; border-bottom: 1px solid #ccc; }
+      #price-table > tbody > tr.item-detail > td { padding: 0.2em 0; }
+
+      /* Stacked rows have the full width, so give the quantity field a
+         comfortable tap target again. */
+      #price-table > tbody > tr > td > input[type="number"] { width: 100%; }
 
       /* Item name leads the block; the rest are labelled inline. */
       #price-table > tbody > tr > td[data-label="Item"] { font-weight: bold; font-size: 1.05em; }
@@ -270,31 +309,48 @@ Our 21st annual tournament.
     <tbody>
     <tr data-item="tournament">
       <td data-label="Item">Tournament Fee</td>
-      <td data-label="Amount">$125</td>
+      <td data-label="Amount">$125<span class="item-unit">per player</span></td>
       <td data-label="Quantity"><input type="number" name="tournament_fee_qty" min="0" step="1" value="0"></td>
       <td data-label="Subtotal" class="subtotal">$0</td>
     </tr>
+    <tr class="item-detail">
+      <td colspan="4">Per player — green fees, half cart, range balls, and
+      dinner. <strong>Entering a full team? Set the quantity to 4.</strong> A
+      corporate sponsorship is not required to enter a team.</td>
+    </tr>
     <tr data-item="mulligan">
-      <td data-label="Item">Mulligans (1/Player)</td>
-      <td data-label="Amount">$10</td>
+      <td data-label="Item">Mulligans</td>
+      <td data-label="Amount">$10<span class="item-unit">each</span></td>
       <td data-label="Quantity"><input type="number" name="mulligan_qty" min="0" step="1" value="0"></td>
       <td data-label="Subtotal" class="subtotal">$0</td>
     </tr>
+    <tr class="item-detail">
+      <td colspan="4">Limit 1 per player, 4 per team.</td>
+    </tr>
     <tr data-item="clubs">
-      <td data-label="Item">Club Rentals (LH or RH)</td>
-      <td data-label="Amount">$35</td>
+      <td data-label="Item">Club Rentals</td>
+      <td data-label="Amount">$35<span class="item-unit">per set</span></td>
       <td data-label="Quantity"><input type="number" name="club_rental_qty" min="0" step="1" value="0"></td>
       <td data-label="Subtotal" class="subtotal">$0</td>
     </tr>
+    <tr class="item-detail">
+      <td colspan="4">Left- or right-handed sets.</td>
+    </tr>
     <tr data-item="sponsor">
       <td data-label="Item">Corporate Sponsor</td>
-      <td data-label="Amount">$1250</td>
+      <td data-label="Amount">$1250<span class="item-unit">per foursome</span></td>
       <td data-label="Quantity"><input type="number" name="corp_sponsor_qty" min="0" step="1" value="0"></td>
       <td data-label="Subtotal" class="subtotal">$0</td>
     </tr>
+    <tr class="item-detail">
+      <td colspan="4">An optional level of support — <strong>not required to
+      enter a team</strong>. Includes your corporate logo on a golf hole plus
+      golf for 4 players, half carts, range balls, and dinner, so no separate
+      tournament fee is needed. Each additional foursome $500.</td>
+    </tr>
     <tr data-item="shirt">
       <td data-label="Item">Shirt w/ Logo</td>
-      <td data-label="Amount">$45</td>
+      <td data-label="Amount">$45<span class="item-unit">each</span></td>
       <td data-label="Quantity">
         <table class="shirt-grid">
           <thead>
@@ -324,11 +380,17 @@ Our 21st annual tournament.
       </td>
       <td data-label="Subtotal" class="subtotal">$0</td>
     </tr>
+    <tr class="item-detail">
+      <td colspan="4">Men's and women's cuts. Pre-order by September 11.</td>
+    </tr>
     <tr data-item="donation">
       <td data-label="Item">Extra Donation</td>
       <td data-label="Amount">any $ counts</td>
       <td data-label="Quantity">$ <input type="number" name="donation_amount" min="0" step="0.01" placeholder="0.00" style="width:7em"></td>
       <td data-label="Subtotal" class="subtotal">$0</td>
+    </tr>
+    <tr class="item-detail">
+      <td colspan="4">Any amount is welcome, on top of any of the above.</td>
     </tr>
     </tbody>
     <tfoot>
@@ -344,8 +406,8 @@ Our 21st annual tournament.
   <!-- Hidden field carrying the client-side total; the server recomputes it. -->
   <input type="hidden" name="calculated_total" id="calculatedTotal">
 
-  <p style="font-size: 0.8em">Tournament Fee includes Green Fees, Cart, Range Balls, and Dinner</p><br/>
-  <p style="font-size: 0.8em">Corporate Sponsorship includes all Tournament Fees for a full foursome. Each additional foursome is an additional $500. Also includes corporate logo signs on the course and displayed during the dinner</p>
+  <p style="font-size: 0.8em">Prices are in US dollars. Raffle tickets ($2 each)
+  are sold at the event.</p>
   <br/>
   <label>
     Additional Notes (special requests, etc.):
