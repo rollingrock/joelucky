@@ -201,7 +201,9 @@ function doPost(e) {
     if (cache.get(fingerprint)) {
       console.log("Duplicate submission suppressed: " + (data.team_name || "") +
                   " / " + (data.contact_email || ""));
-      return doneResponse_();
+      // Recomputed rather than skipped: this submitter sees the same
+      // thank-you page as a first-time one, and that page shows the amount.
+      return doneResponse_(computeServerTotal_(data));
     }
 
     var response = recordSubmission_(data);
@@ -271,16 +273,27 @@ function recordSubmission_(data) {
     }
   }
 
-  return doneResponse_();
+  return doneResponse_(serverTotal);
 }
 
 // A suppressed duplicate gets the same answer a fresh submission does — the
 // submitter did nothing wrong and should not be told anything is amiss.
-function doneResponse_() {
+function doneResponse_(total) {
   if (THANKYOU_URL) {
+    var url = THANKYOU_URL;
+    // Shown on the thank-you page next to the PayPal button, so the amount is
+    // on screen before the confirmation e-mail arrives. Display only — the
+    // authoritative figure is the server_total column in the sheet, and the
+    // e-mail carries the itemized breakdown. A zero or missing total appends
+    // nothing and the page simply omits the amount.
+    if (Number.isFinite(total) && total > 0) {
+      url += (url.indexOf("?") === -1 ? "?" : "&") +
+             "total=" + encodeURIComponent(total.toFixed(2));
+    }
+    var safeUrl = escapeHtml_(url);
     return HtmlService.createHtmlOutput(
-      '<!doctype html><meta http-equiv="refresh" content="0; url=' + THANKYOU_URL + '">' +
-      '<p>Thanks! If you are not redirected, <a href="' + THANKYOU_URL + '">click here</a>.</p>'
+      '<!doctype html><meta http-equiv="refresh" content="0; url=' + safeUrl + '">' +
+      '<p>Thanks! If you are not redirected, <a href="' + safeUrl + '">click here</a>.</p>'
     );
   }
   return ContentService

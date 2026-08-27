@@ -607,14 +607,14 @@ Our 21st annual tournament.
 
 
 #### Methods of Supporting this Event:
-1. Donations (Cash, Check, or Credit Card)
+1. Donations
 2. Corporate Sponsorship (Click on “Contact Us” at the bottom of the page for details.)
 3. Individual Tournament  Fees
 4. Volunteers
 
 #### Methods of Payment/Donation
 1. Preferred method of payment is to use the PayPal link below to electronically transfer funds from your bank account or credit card.
-2. Checks can be made out to JLMGT, Inc. and handed to a committee member during registration.
+2. Credit or debit card — we will have a card reader at check-in on the day of the tournament.
 
 
 <table border="0" width="100%" cellpadding="5">
