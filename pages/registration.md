@@ -34,6 +34,14 @@ Click on the “Contact Us” link at the bottom of this page and send a detaile
 #### 2026 Event Registration
 Our 21st annual tournament.
 
+#### Two Ways to Register
+1. **Tournament entry — $125 per player.** Teams and individuals both register
+   at this rate; a full team is simply four players. It covers green fees, a
+   golf cart, range balls, and dinner afterwards.
+2. **Corporate Sponsorship — $1250.** All of the above for four players, plus a
+   hole sponsorship with your company logo displayed on a golf hole. No
+   separate tournament fee is needed, and each additional foursome is $500.
+
 <div style="border: 1px solid black; padding: 10px">
 <form
   action="https://script.google.com/macros/s/AKfycbx-y1-0W-ZFZJ_1khfb8oWtvlfWzNYyYAKXDkS2e-exb8ReQD1G9MYUxgjGTnLjNgyU/exec"
@@ -56,10 +64,9 @@ Our 21st annual tournament.
         Please check which applies
       </label>
       <p class="fs-description">
-        Teams and individuals both register at <strong>$125 per player</strong>.
-        A <strong>Corporate Sponsorship</strong> covers a team of 4 on its own —
-        add it in the price table below, where no separate tournament fee is
-        then needed.
+        Whether you are entering a team or a single player. Corporate sponsors
+        entering a foursome should choose <em>Registering a Team</em>; the
+        sponsorship itself is added in the price table below.
       </p>
       <div class="fs-checkbox-group">
         <div class="fs-checkbox-field">
