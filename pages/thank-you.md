@@ -34,7 +34,7 @@ within a few minutes, please check your spam folder.
 <tbody>
 <tr><td>When: </td><td>Thursday, October 1st 2026</td></tr>
 <tr><td>Where: </td><td>Sherrill Park Golf Course, Course #1<br/>2001 East Lookout Drive<br/>Richardson, Tx 75082<br/>972-234-1416</td></tr>
-<tr><td>Start Time: </td><td>11:00 AM Check-in<br/>12:00 PM Shotgun Start<br/>Dinner Afterwards</td></tr>
+<tr><td>Start Time: </td><td>10:30 AM Check-in<br/>12:00 PM Shotgun Start<br/>Dinner Afterwards</td></tr>
 </tbody></table>
 
 Questions? <a title="click to ask for more information" href="{{ site.url }}{{ site.baseurl }}/contact/">Contact Us</a>.
