@@ -10,21 +10,28 @@ const PRIVATE_DIR = '/home/jaspha2/board-private'; // outside the docroot
 const STALE_AFTER = 2 * 3600;                       // the push runs every 15 minutes
 
 date_default_timezone_set('America/Chicago');
-$nonce = base64_encode(random_bytes(16));
 
-header('Content-Type: text/html; charset=utf-8');
 header('Cache-Control: no-store'); // registrant PII: keep it out of shared caches
 header('X-Robots-Tag: noindex, nofollow');
 header('Referrer-Policy: no-referrer');
 header('X-Content-Type-Options: nosniff');
-header("Content-Security-Policy: default-src 'none'; style-src 'nonce-$nonce'; "
-     . "script-src 'nonce-$nonce'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
 
 // Every cell came from an anonymous web form, so everything is escaped on the
 // way out. A team name is not allowed to become a script.
 function h($value): string
 {
     return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+// Nor a formula: Excel and Sheets execute a CSV cell that starts with one of
+// these characters, so such a cell is prefixed with a quote and shows as text.
+function csv_cell($value): string
+{
+    $cell = (string) $value;
+    if ($cell !== '' && strpos("=+-@\t\r\n", $cell[0]) !== false) {
+        $cell = "'" . $cell;
+    }
+    return $cell;
 }
 
 function ago(int $seconds): string
@@ -56,6 +63,31 @@ $source   = (string) ($snapshot['sheet'] ?? '');
 $received = isset($snapshot['received_at']) ? strtotime((string) $snapshot['received_at']) : false;
 $age      = $received ? max(0, time() - $received) : null;
 $stale    = $snapshot !== null && ($age === null || $age > STALE_AFTER);
+
+// ?csv downloads the same snapshot for Excel, in sheet order (oldest first).
+if ($snapshot !== null && isset($_GET['csv'])) {
+    $tag   = preg_replace('/[^0-9A-Za-z-]/', '', $year) ?: 'board';
+    $stamp = $received ? date('Y-m-d-Hi', $received) : 'undated';
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="jlmgt-' . $tag . '-registrations-' . $stamp . '.csv"');
+    $out = fopen('php://output', 'w');
+    fwrite($out, "\xEF\xBB\xBF"); // byte-order mark, so Excel reads accented names as UTF-8
+    fputcsv($out, array_map('csv_cell', $headers), ',', '"', '');
+    foreach ($snapshot['rows'] as $row) {
+        $line = [];
+        foreach ($headers as $i => $header) {
+            $line[] = csv_cell($row[$i] ?? '');
+        }
+        fputcsv($out, $line, ',', '"', '');
+    }
+    fclose($out);
+    exit;
+}
+
+$nonce = base64_encode(random_bytes(16));
+header('Content-Type: text/html; charset=utf-8');
+header("Content-Security-Policy: default-src 'none'; style-src 'nonce-$nonce'; "
+     . "script-src 'nonce-$nonce'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
 ?>
 <!doctype html>
 <html lang="en">
@@ -70,7 +102,10 @@ $stale    = $snapshot !== null && ($age === null || $age > STALE_AFTER);
   .meta { color: #555; margin: 0 0 .75rem; }
   .warn { background: #fff4d6; border: 1px solid #e0b64b; padding: .6rem .8rem; margin: 0 0 .75rem; }
   .err  { background: #fde8e8; border: 1px solid #d9534f; padding: .6rem .8rem; margin: 0 0 .75rem; }
-  #q { width: 100%; max-width: 28rem; padding: .45rem .6rem; font: inherit; border: 1px solid #bbb; border-radius: 4px; margin: 0 0 .75rem; box-sizing: border-box; }
+  .tools { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: 0 0 .75rem; }
+  #q { flex: 1 1 16rem; max-width: 28rem; padding: .45rem .6rem; font: inherit; border: 1px solid #bbb; border-radius: 4px; box-sizing: border-box; }
+  .btn { padding: .45rem .8rem; border: 1px solid #1a5fb4; border-radius: 4px; color: #1a5fb4; text-decoration: none; white-space: nowrap; }
+  .btn:hover { background: #eef4fc; }
   .scroll { overflow-x: auto; border: 1px solid #ddd; }
   table { border-collapse: collapse; white-space: nowrap; font-size: 13px; }
   th, td { padding: .35rem .6rem; border-bottom: 1px solid #eee; text-align: left; vertical-align: top; }
@@ -96,7 +131,10 @@ $stale    = $snapshot !== null && ($age === null || $age > STALE_AFTER);
 <p class="warn">This copy is more than two hours old, so the sync from the sheet may be broken. Jason: check the Apps Script executions for pushBoardSnapshot.</p>
 <?php endif; ?>
 
-<input id="q" type="search" placeholder="Filter by name, team, email, anything" autocomplete="off">
+<div class="tools">
+  <input id="q" type="search" placeholder="Filter by name, team, email, anything" autocomplete="off">
+  <a class="btn" href="?csv">Download CSV</a>
+</div>
 
 <div class="scroll">
 <table>
