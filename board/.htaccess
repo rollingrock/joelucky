@@ -1,0 +1,20 @@
+# Board members' read-only mirror of the registration sheet. The password file
+# lives outside the docroot, so a deploy never touches it and nothing secret is
+# in the (public) repo. Create it once over SSH:
+#
+#   mkdir -p /home/jaspha2/board-private
+#   htpasswd -B -c /home/jaspha2/board-private/.htpasswd board
+#
+# Full setup, including the push key, is in apps-script/README.md.
+#
+AuthType Basic
+AuthName "JLMGT board"
+AuthUserFile /home/jaspha2/board-private/.htpasswd
+Require valid-user
+
+# The Apps Script push authenticates with its own key (see ingest.php), not a
+# browser login. Apache 2.4 lets this more specific section replace the
+# directory-level Require above.
+<Files "ingest.php">
+  Require all granted
+</Files>

@@ -38,7 +38,10 @@ if [ ! -s "_site/index.html" ]; then
   exit 1
 fi
 
-RSYNC_ARGS=(-avz --delete -e "ssh -o StrictHostKeyChecking=no"
+# WSL reports every file under /mnt/c as 0777, and -a would copy that mode to
+# the server. Static HTML is served regardless; PHP under board/ is run as this
+# user by suexec-style FastCGI and may refuse a world-writable script.
+RSYNC_ARGS=(-avz --delete --chmod=D755,F644 -e "ssh -o StrictHostKeyChecking=no"
             _site/ "$USER@$HOST:$REMOTE_DIR/")
 
 echo "Checking what this deploy would remove..."

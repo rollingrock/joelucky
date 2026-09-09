@@ -87,6 +87,16 @@ The development config overlays the production config, changing URLs, disabling 
 - Tracks form completion time
 - Handles special pricing (corporate sponsors: first foursome $1250, additional $500 each)
 
+**Board mirror** (`board/`):
+- Read-only copy of the registration sheet at `/board/`, behind HTTP Basic
+  Auth, for board members whose employers block Google Sheets
+- `apps-script/registration/Board.js` pushes a snapshot every 15 minutes to
+  `board/ingest.php`, which stores it in `/home/jaspha2/board-private/`
+  outside the docroot; `board/index.php` renders it
+- No front matter on the PHP files, so Jekyll copies them verbatim and they
+  never enter the sitemap or search index. Setup steps are in
+  `apps-script/README.md`
+
 **Navigation**:
 - Configured via `_data/navigation.yml`
 - Supports dropdown menus (e.g., Tournament Photos dropdown)

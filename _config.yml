@@ -82,6 +82,12 @@ exclude:
     - convert_thumbs.py
     - optimize_gallery.py
     - assets/logo-master
+    # Maintainer notes and packaging, not site content. Without these lines
+    # Jekyll copies them to _site and the deploy publishes them.
+    - CLAUDE.md
+    - AGENTS.md
+    - newaddress.txt
+    - jekyll-theme-feeling-responsive.gemspec
 
 
 # The language setting is used in /includes/header.html for html-settings
